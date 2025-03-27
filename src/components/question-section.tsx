@@ -10,29 +10,23 @@ interface QuestionSectionProps {
 }
 
 export const QuestionSection = ({ questions }: QuestionSectionProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingQuestion, setPlayingQuestion] = useState<string | null>(null);
   const [isWebCam, setIsWebCam] = useState(false);
 
-  const [currentSpeech, setCurrentSpeech] =
-    useState<SpeechSynthesisUtterance | null>(null);
-
   const handlePlayQuestion = (qst: string) => {
-    if (isPlaying && currentSpeech) {
-      // stop the speech if already playing
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setCurrentSpeech(null);
+    // Stop any currently playing speech
+    window.speechSynthesis.cancel();
+    
+    if (playingQuestion === qst) {
+      setPlayingQuestion(null);
     } else {
       if ("speechSynthesis" in window) {
         const speech = new SpeechSynthesisUtterance(qst);
         window.speechSynthesis.speak(speech);
-        setIsPlaying(true);
-        setCurrentSpeech(speech);
+        setPlayingQuestion(qst);
 
-        // handle the speech end
         speech.onend = () => {
-          setIsPlaying(false);
-          setCurrentSpeech(null);
+          setPlayingQuestion(null);
         };
       }
     }
@@ -41,9 +35,10 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
   return (
     <div className="w-full min-h-96 border rounded-md p-4">
       <Tabs
-        defaultValue={questions[0]?.question}
+        defaultValue={questions.length > 0 ? questions[0].question : ""}
         className="w-full space-y-12"
         orientation="vertical"
+        onValueChange={() => window.speechSynthesis.cancel()}  // Auto stop speech on tab switch
       >
         <TabsList className="bg-transparent w-full flex flex-wrap items-center justify-start gap-4">
           {questions?.map((tab, i) => (
@@ -67,9 +62,9 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
 
             <div className="w-full flex items-center justify-end">
               <TooltipButton
-                content={isPlaying ? "Stop" : "Start"}
+                content={playingQuestion === tab.question ? "Stop" : "Start"}
                 icon={
-                  isPlaying ? (
+                  playingQuestion === tab.question ? (
                     <VolumeX className="min-w-5 min-h-5 text-muted-foreground" />
                   ) : (
                     <Volume2 className="min-w-5 min-h-5 text-muted-foreground" />
