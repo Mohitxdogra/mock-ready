@@ -16,7 +16,6 @@ import { MockInterviewPage } from "./routes/mock-interview-page"; // Ensure this
 import { Feedback } from "./routes/feedback";
 import ServicesPage from "./routes/Services";  
 import About from "./routes/AboutUs";
-
 const App = () => {
   return (
     <Router>

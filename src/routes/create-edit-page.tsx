@@ -1,7 +1,7 @@
 import { FormMockInterview } from "@/components/form-mock-interview";
 import { db } from "@/config/firebase.config";
 import { Interview } from "@/types";
-import { doc, getDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -29,9 +29,28 @@ export const CreateEditPage = () => {
     fetchInterview();
   }, [interviewId]);
 
+  const handleReset = () => {
+    setInterview(null);
+  };
+
+  const handleDelete = async () => {
+    if (interviewId) {
+      try {
+        await deleteDoc(doc(db, "interviews", interviewId));
+        setInterview(null);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   return (
     <div className="my-4 flex-col w-full">
-      <FormMockInterview initialData={interview} />
+      <FormMockInterview
+        initialData={interview}
+        onReset={handleReset}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };

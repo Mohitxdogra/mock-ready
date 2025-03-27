@@ -33,6 +33,8 @@ import { toast } from "sonner";
 
 interface FormMockInterview {
   initialData: Interview | null;
+  onReset: () => void;
+  onDelete: () => Promise<void>;
 }
 
 const formSchema = z.object({
@@ -49,7 +51,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export const FormMockInterview = ({ initialData }: FormMockInterview) => {
+export const FormMockInterview = ({ initialData, onReset, onDelete }: FormMockInterview) => {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {},
@@ -64,7 +66,7 @@ export const FormMockInterview = ({ initialData }: FormMockInterview) => {
     ? initialData.position
     : "Create a new mock interview";
 
-  const breadCrumpPage = initialData ? initialData?.position : "Create";
+  const breadCrumbPage = initialData ? initialData?.position : "Create";
   const actions = initialData ? "Save Changes" : "Create";
   const toastMessage = initialData
     ? { title: "Updated..!", description: "Changes saved successfully..." }
@@ -186,18 +188,18 @@ export const FormMockInterview = ({ initialData }: FormMockInterview) => {
     <div className="w-full flex-col space-y-4">
       {/* Bread Crumb */}
       <CustomBreadCrumb
-        breadCrumbPage={breadCrumpPage}
-        breadCrumpItems={[{ label: "Mock Interviews", link: "/generate" }]}
+      breadCrumbPage={breadCrumbPage}
+      breadCrumpItems={[{ label: "Mock Interviews", link: "/generate" }]}
       />
 
       <div className="mt-4 flex items-center justify-between w-full">
-        <Headings title={title} isSubHeading />
+      <Headings title={title} isSubHeading />
 
-        {initialData && (
-          <Button size={"icon"} variant={"ghost"}>
-            <Trash2 className="text-red-500 min-w-4 min-h-4" />
-          </Button>
-        )}
+      {initialData && (
+        <Button size={"icon"} variant={"ghost"} onClick={onDelete}>
+        <Trash2 className="text-red-500 min-w-4 min-h-4" />
+        </Button>
+      )}
       </div>
 
       <Separator className="my-4" />
@@ -205,33 +207,33 @@ export const FormMockInterview = ({ initialData }: FormMockInterview) => {
       <div className="my-6"></div>
 
       <FormProvider {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full p-8 rounded-lg flex-col flex items-start justify-start gap-6 shadow-md "
-        >
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem className="w-full space-y-4">
-                <div className="w-full flex items-center justify-between">
-                  <FormLabel>Job Role / Job Position</FormLabel>
-                  <FormMessage className="text-sm" />
-                </div>
-                <FormControl>
-                  <Input
-                    className="h-12"
-                    disabled={isLoading}
-                    placeholder="eg:- Full Stack Developer"
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full p-8 rounded-lg flex-col flex items-start justify-start gap-6 shadow-md "
+      >
+        <FormField
+        control={form.control}
+        name="position"
+        render={({ field }) => (
+          <FormItem className="w-full space-y-4">
+          <div className="w-full flex items-center justify-between">
+            <FormLabel>Job Role / Job Position</FormLabel>
+            <FormMessage className="text-sm" />
+          </div>
+          <FormControl>
+            <Input
+            className="h-12"
+            disabled={isLoading}
+            placeholder="eg:- Full Stack Developer"
+            {...field}
+            />
+          </FormControl>
+          </FormItem>
+        )}
+        />
 
-          <FormField
-            control={form.control}
+        <FormField
+        control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem className="w-full space-y-4">
@@ -300,6 +302,7 @@ export const FormMockInterview = ({ initialData }: FormMockInterview) => {
               size={"sm"}
               variant={"outline"}
               disabled={isSubmitting || isLoading}
+              onClick={onReset}
             >
               Reset
             </Button>

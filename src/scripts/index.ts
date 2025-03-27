@@ -38,6 +38,14 @@ import {
     },
   ];
   
+  /**
+   * Starts a chat session with the provided configuration and safety settings.
+   *
+   * @constant {ChatSession} chatSession - The chat session instance.
+   * @param {GenerationConfig} generationConfig - The configuration for generating chat responses.
+   * @param {SafetySettings} safetySettings - The settings to ensure chat safety.
+   * @returns {ChatSession} The initialized chat session.
+   */
   export const chatSession = model.startChat({
     generationConfig,
     safetySettings,
