@@ -1,4 +1,4 @@
-import Counter from "../motion/Counter";
+import Counter from "../motion/counter";
 
 export const Statistics = () => {
   const stats = [
