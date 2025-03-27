@@ -12,7 +12,7 @@ import { CreateEditPage } from "./routes/create-edit-page";
 import ResumeBuilder from "./components/Resume/resume-builder";
 import ContactUs from "./routes/ContactUs";
 import { MockLoadPage } from "./routes/mock-load-page";
-import { MockInterviewPage } from "./routes/mock-interview-page"; // Ensure this file exists
+import { MockInterviewPage } from "./routes/mock-interview-page"; 
 import { Feedback } from "./routes/feedback";
 import ServicesPage from "./routes/Services";  
 import About from "./routes/AboutUs";

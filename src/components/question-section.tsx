@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TooltipButton } from "./tooltip-button";
@@ -10,75 +10,91 @@ interface QuestionSectionProps {
 }
 
 export const QuestionSection = ({ questions }: QuestionSectionProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const [isWebCam, setIsWebCam] = useState(false);
-
   const [currentSpeech, setCurrentSpeech] =
     useState<SpeechSynthesisUtterance | null>(null);
+  const [activeTab, setActiveTab] = useState(questions[0]?.question || "");
 
-  const handlePlayQuestion = (qst: string) => {
-    if (isPlaying && currentSpeech) {
-      // stop the speech if already playing
+  // 🛑 Stop speech when switching questions
+  useEffect(() => {
+    if (currentSpeech) {
       window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      setPlayingIndex(null);
+      setCurrentSpeech(null);
+    }
+  }, [activeTab]); // Runs when activeTab changes
+
+  const handlePlayQuestion = (qst: string, index: number) => {
+    if (playingIndex === index && currentSpeech) {
+      // Stop current speech
+      window.speechSynthesis.cancel();
+      setPlayingIndex(null);
       setCurrentSpeech(null);
     } else {
-      if ("speechSynthesis" in window) {
-        const speech = new SpeechSynthesisUtterance(qst);
-        window.speechSynthesis.speak(speech);
-        setIsPlaying(true);
-        setCurrentSpeech(speech);
+      // Stop any ongoing speech before playing new
+      window.speechSynthesis.cancel();
 
-        // handle the speech end
-        speech.onend = () => {
-          setIsPlaying(false);
-          setCurrentSpeech(null);
-        };
-      }
+      const speech = new SpeechSynthesisUtterance(qst);
+      window.speechSynthesis.speak(speech);
+      setPlayingIndex(index);
+      setCurrentSpeech(speech);
+
+      // Reset state when speech ends
+      speech.onend = () => {
+        setPlayingIndex(null);
+        setCurrentSpeech(null);
+      };
     }
   };
 
   return (
-    <div className="w-full min-h-96 border rounded-md p-4">
+    <div className="w-full min-h-96 border border-gray-300 rounded-lg p-6 shadow-md bg-white">
       <Tabs
         defaultValue={questions[0]?.question}
-        className="w-full space-y-12"
+        className="w-full space-y-6"
         orientation="vertical"
+        onValueChange={(value) => setActiveTab(value)} // ⬅️ Track active tab
       >
-        <TabsList className="bg-transparent w-full flex flex-wrap items-center justify-start gap-4">
+        {/* Tabs List */}
+        <TabsList className="bg-gray-100 w-full flex overflow-x-auto items-center gap-3 p-3 rounded-lg shadow-sm">
           {questions?.map((tab, i) => (
             <TabsTrigger
-              className={cn(
-                "data-[state=active]:bg-emerald-200 data-[state=active]:shadow-md text-xs px-2"
-              )}
               key={tab.question}
               value={tab.question}
+              aria-label={`Question ${i + 1}`}
+              className={cn(
+                "px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                "hover:bg-gray-200",
+                "data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+              )}
             >
               {`Question #${i + 1}`}
             </TabsTrigger>
           ))}
         </TabsList>
 
+        {/* Question Sections */}
         {questions?.map((tab, i) => (
-          <TabsContent key={i} value={tab.question}>
-            <p className="text-base text-left tracking-wide text-neutral-500">
-              {tab.question}
-            </p>
+          <TabsContent key={i} value={tab.question} className="p-4">
+            <p className="text-lg font-medium text-gray-800">{tab.question}</p>
 
-            <div className="w-full flex items-center justify-end">
+            {/* Play/Stop Button */}
+            <div className="flex items-center justify-end mt-3">
               <TooltipButton
-                content={isPlaying ? "Stop" : "Start"}
+                content={playingIndex === i ? "Stop" : "Play"}
                 icon={
-                  isPlaying ? (
-                    <VolumeX className="min-w-5 min-h-5 text-muted-foreground" />
+                  playingIndex === i ? (
+                    <VolumeX className="w-6 h-6 text-red-500" />
                   ) : (
-                    <Volume2 className="min-w-5 min-h-5 text-muted-foreground" />
+                    <Volume2 className="w-6 h-6 text-green-500" />
                   )
                 }
-                onClick={() => handlePlayQuestion(tab.question)}
+                onClick={() => handlePlayQuestion(tab.question, i)}
               />
             </div>
 
+            {/* Answer Recording Section */}
             <RecordAnswer
               question={tab}
               isWebCam={isWebCam}
