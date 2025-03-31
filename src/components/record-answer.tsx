@@ -10,7 +10,7 @@ import {
   VideoOff,
   WebcamIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import useSpeechToText from "react-hook-speech-to-text";
 import { useParams } from "react-router-dom";
 import WebCam from "react-webcam";
@@ -67,12 +67,13 @@ export const RecordAnswer = ({ question, isWebCam, setIsWebCam }: RecordAnswerPr
     }
   };
 
-  const cleanJsonResponse = (responseText: string) => {
+  const cleanJsonResponse = (responseText: string): AIResponse => {
     let cleanText = responseText.trim().replace(/(```|json|`)/g, "");
     try {
       return JSON.parse(cleanText);
     } catch (error) {
-      throw new Error("Invalid JSON format: " + (error as Error)?.message);
+      console.error("Error parsing AI response:", error);
+      return { ratings: 0, feedback: "Unable to generate valid feedback" };
     }
   };
 
@@ -86,10 +87,14 @@ export const RecordAnswer = ({ question, isWebCam, setIsWebCam }: RecordAnswerPr
     `;
     try {
       const aiResult = await chatSession.sendMessage(prompt);
-      return cleanJsonResponse(await aiResult.response.text());
+      const parsedResult = cleanJsonResponse(await aiResult.response.text());
+      if (!parsedResult?.ratings || !parsedResult?.feedback) {
+        throw new Error("Incomplete AI response");
+      }
+      return parsedResult;
     } catch (error) {
       toast.error("An error occurred while generating feedback.");
-      console.error(error);
+      console.error("Error while generating feedback:", error);
       return { ratings: 0, feedback: "Unable to generate feedback" };
     } finally {
       setIsAiGenerating(false);
@@ -122,34 +127,54 @@ export const RecordAnswer = ({ question, isWebCam, setIsWebCam }: RecordAnswerPr
       toast.success("Your answer has been saved.");
     } catch (error) {
       toast.error("An error occurred while saving.");
-      console.error(error);
+      console.error("Error while saving:", error);
     } finally {
       setLoading(false);
       setOpen(false);
     }
   };
 
-  useEffect(() => {
-    setUserAnswer(results.map((result) => (typeof result !== "string" ? result.transcript : "")).join(" "));
+  const handleSpeechResults = useCallback(() => {
+    setUserAnswer(results.join(" "));
   }, [results]);
+
+  useEffect(() => {
+    handleSpeechResults();
+  }, [results, handleSpeechResults]);
 
   return (
     <div className="w-full flex flex-col items-center gap-8 mt-4">
       <SaveModal isOpen={open} onClose={() => setOpen(false)} onConfirm={saveUserAnswer} loading={loading} />
-      <div className="w-full h-[400px] md:w-96 flex flex-col items-center justify-center border p-4 bg-gray-50 rounded-md">
-        {isWebCam ? <WebCam className="w-full h-full object-cover rounded-md" /> : <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />}
-      </div>
-      <div className="flex justify-center gap-3">
-        <TooltipButton content={isWebCam ? "Turn Off" : "Turn On"} icon={isWebCam ? <VideoOff /> : <Video />} onClick={() => setIsWebCam(!isWebCam)} />
-        <TooltipButton content={isRecording ? "Stop Recording" : "Start Recording"} icon={isRecording ? <CircleStop /> : <Mic />} onClick={recordUserAnswer} />
-        <TooltipButton content="Record Again" icon={<RefreshCw />} onClick={() => { setUserAnswer(""); startSpeechToText(); }} />
-        <TooltipButton content="Save Result" icon={isAiGenerating ? <Loader className="animate-spin" /> : <Save />} onClick={() =>
-           setOpen(true)} disabled={!aiResult} />
-      </div>
-      <div className="w-full mt-4 p-4 border rounded-md bg-gray-50">
-        <h2 className="text-lg font-semibold">Your Answer:</h2>
-        <p className="text-sm mt-2 text-gray-700">{userAnswer || "Start recording to see your answer here"}</p>
-        {interimResult && <p className="text-sm text-gray-500 mt-2"><strong>Current Speech:</strong> {interimResult}</p>}
+      <div className="flex flex-col md:flex-row w-full gap-4">
+        {/* Left Section: Your Answer */}
+        <div className="flex-1 p-4 border rounded-md bg-gray-50">
+          <h2 className="text-lg font-semibold">Your Answer:</h2>
+          <p className="text-sm mt-2 text-gray-700">{userAnswer || "Start recording to see your answer here"}</p>
+          {interimResult && (
+            <p className="text-sm text-gray-500 mt-2">
+              <strong>Current Speech:</strong> {interimResult}
+            </p>
+          )}
+        </div>
+
+        {/* Right Section: Webcam */}
+        <div className="flex-1 flex flex-col items-center justify-center border p-4 bg-gray-50 rounded-md">
+          <div className="flex justify-center mb-4">
+            {isWebCam ? (
+              <WebCam className="w-[250px] h-[250px] object-cover rounded-md" /> // Reduced size of the webcam
+            ) : (
+              <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />
+            )}
+          </div>
+
+          {/* Buttons aligned horizontally next to the webcam */}
+          <div className="flex justify-center gap-4">
+            <TooltipButton content={isWebCam ? "Turn Off" : "Turn On"} icon={isWebCam ? <VideoOff /> : <Video />} onClick={() => setIsWebCam(!isWebCam)} />
+            <TooltipButton content={isRecording ? "Stop Recording" : "Start Recording"} icon={isRecording ? <CircleStop /> : <Mic />} onClick={recordUserAnswer} />
+            <TooltipButton content="Record Again" icon={<RefreshCw />} onClick={() => { setUserAnswer(""); startSpeechToText(); }} />
+            <TooltipButton content="Save Result" icon={isAiGenerating ? <Loader className="animate-spin" /> : <Save />} onClick={() => setOpen(true)} disabled={!aiResult || isAiGenerating} />
+          </div>
+        </div>
       </div>
     </div>
   );

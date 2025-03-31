@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from './theme-provider'
 import { FAQ } from './FAQ'
-import { Testimonials } from './Testimonials'
+import { Testimonials } from '@/components/testimonial'
 import { MarqueeLogos } from './MarqueeLogos'
 
 

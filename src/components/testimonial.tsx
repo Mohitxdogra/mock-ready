@@ -1,83 +1,115 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 
-const testimonials = [
+interface Testimonial {
+  id: number;
+  name: string;
+  role: string;
+  company: string;
+  content: string;
+  image: string;
+  rating: number;
+}
+
+const initialTestimonials: Testimonial[] = [
   {
-    name: "Aman Sharma",
-    role: "Software Engineer at Google",
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
-    feedback:
-      "Mock Ready transformed my interview preparation. The AI-driven insights were a game-changer!",
+    id: 1,
+    name: "Sarah Johnson",
+    role: "Software Engineer",
+    company: "Google",
+    content:
+      "Mock Ready helped me prepare for my technical interviews effectively. The AI-powered feedback was incredibly valuable!",
+    image: "",
     rating: 5,
   },
   {
-    name: "Priya Verma",
-    role: "Frontend Developer at Microsoft",
-    image: "https://randomuser.me/api/portraits/women/45.jpg",
-    feedback:
-      "The resume builder helped me craft a standout CV, and I landed my dream job effortlessly!",
-    rating: 3,
+    id: 2,
+    name: "Michael Chen",
+    role: "Product Manager",
+    company: "Microsoft",
+    content:
+      "The resume builder tool is fantastic! It helped me create a professional resume that landed me multiple interviews.",
+    image: "",
+    rating: 4,
   },
   {
-    name: "Rahul Mehta",
-    role: "Data Analyst at Amazon",
-    image: "https://randomuser.me/api/portraits/men/28.jpg",
-    feedback:
-      "The mock interviews felt incredibly real, and the personalized feedback was invaluable.",
-    rating: 4,
+    id: 3,
+    name: "Emily Rodriguez",
+    role: "Data Scientist",
+    company: "Amazon",
+    content:
+      "The practice interviews were so realistic. I felt much more confident during my actual interviews thanks to Mock Ready.",
+    image: "",
+    rating: 3,
   },
 ];
 
-export default function Testimonials() {
+export const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  useEffect(() => {
+    const updatedTestimonials = initialTestimonials.map((testimonial, index) => ({
+      ...testimonial,
+      image: `https://randomuser.me/api/portraits/${index % 2 === 0 ? "men" : "women"}/${index * 10 + 5}.jpg`,
+    }));
+    setTestimonials(updatedTestimonials);
+  }, []);
+
   return (
-    <div className="py-16 bg-gray-100 dark:bg-gray-900">
-      <h2 className="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
-        What Professionals Say About{" "}
-        <span className="text-blue-600">Mock Ready</span>
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6 md:px-12">
+    <div className="relative py-16 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold mb-4 text-cyan-400">
+          What Our Users Say
+        </h2>
+        <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+          Join thousands of successful professionals who have transformed their careers with Mock Ready.
+        </p>
+      </div>
+
+      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 px-6 md:px-12">
         {testimonials.map((testimonial, index) => (
           <motion.div
-            key={index}
+            key={testimonial.id}
+            className={`bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-lg transition-transform duration-300 hover:scale-105 ${
+              index === activeTestimonial ? "ring-2 ring-cyan-500" : ""
+            }`}
+            onMouseEnter={() => setActiveTestimonial(index)}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.2 }}
-            whileHover={{ scale: 1.05 }}
           >
-            <Card className="p-6 shadow-lg rounded-2xl bg-white dark:bg-gray-800 border-2 border-cyan-500">
-              <CardContent className="flex flex-col items-center text-center">
-                <Avatar className="w-20 h-20 mb-4 border-2 border-cyan-500">
-                  <AvatarImage src={testimonial.image} alt={testimonial.name} />
-                </Avatar>
-                <p className="text-gray-700 dark:text-gray-300 italic">
-                  "{testimonial.feedback}"
+            <div className="flex items-center gap-4 mb-6">
+              <img
+                src={testimonial.image}
+                alt={testimonial.name}
+                className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500"
+              />
+              <div>
+                <h3 className="text-lg font-semibold text-white">{testimonial.name}</h3>
+                <p className="text-sm text-gray-400">
+                  {testimonial.role} at {testimonial.company}
                 </p>
-                <div className="flex mt-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={18}
-                      className={
-                        i < testimonial.rating
-                          ? "text-green-500"
-                          : "text-gray-300 dark:text-gray-600"
-                      }
-                    />
-                  ))}
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-                  {testimonial.name}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {testimonial.role}
-                </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+            <p className="text-gray-300 italic">"{testimonial.content}"</p>
+            <div className="flex mt-3">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={18}
+                  className={
+                    i < testimonial.rating
+                      ? "text-yellow-400"
+                      : "text-gray-600"
+                  }
+                />
+              ))}
+            </div>
           </motion.div>
         ))}
       </div>
     </div>
   );
-}
+};
