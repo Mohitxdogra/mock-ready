@@ -1,37 +1,26 @@
-import Counter from "../motion/counter";
+import { Counter } from '../motion/counter';
 
 export const Statistics = () => {
-  const stats = [
-    {
-      quantity: 10000,
-      description: "Pengguna",
-    },
-    {
-      quantity: 8700,
-      description: "Pelanggan",
-    },
-    {
-      quantity: 5000,
-      description: "Downloads",
-    },
-    {
-      quantity: 1,
-      description: "Produk",
-    },
-  ] as const;
-
   return (
-    <section id="statistics">
-      <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-        {stats.map(({ quantity, description }) => (
-          <div key={description} className="space-y-2 text-center">
-            <h2 className="text-3xl font-bold sm:text-4xl ">
-              <Counter value={quantity} />
-            </h2>
-            <p className="text-xl text-muted-foreground">{description}</p>
-          </div>
-        ))}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12">
+      <div className="text-center">
+        <div className="text-4xl font-bold text-blue-500 mb-2">
+          <Counter value={1000} />+
+        </div>
+        <div className="text-gray-300">Users</div>
       </div>
-    </section>
+      <div className="text-center">
+        <div className="text-4xl font-bold text-blue-500 mb-2">
+          <Counter value={5000} />+
+        </div>
+        <div className="text-gray-300">Practice Sessions</div>
+      </div>
+      <div className="text-center">
+        <div className="text-4xl font-bold text-blue-500 mb-2">
+          <Counter value={95} />%
+        </div>
+        <div className="text-gray-300">Success Rate</div>
+      </div>
+    </div>
   );
 };

@@ -79,12 +79,12 @@ export default function ContactUs() {
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 shadow-xl border border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+          <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                   Name
                 </label>
-                <input
-                  type="text"
+            <input
+              type="text"
                   name="name"
                   id="name"
                   value={formData.name}
@@ -93,15 +93,15 @@ export default function ContactUs() {
                   disabled={isSubmitting}
                   className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                   placeholder="Your name"
-                />
-              </div>
+            />
+          </div>
 
-              <div>
+          <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                   Email
                 </label>
-                <input
-                  type="email"
+            <input
+              type="email"
                   name="email"
                   id="email"
                   value={formData.email}
@@ -128,14 +128,14 @@ export default function ContactUs() {
                 disabled={isSubmitting}
                 className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                 placeholder="What is this about?"
-              />
-            </div>
+            />
+          </div>
 
-            <div>
+          <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
                 Message
               </label>
-              <textarea
+            <textarea
                 name="message"
                 id="message"
                 rows={6}
@@ -145,19 +145,19 @@ export default function ContactUs() {
                 disabled={isSubmitting}
                 className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none disabled:opacity-50"
                 placeholder="Your message here..."
-              />
-            </div>
+            />
+          </div>
 
             <div>
-              <button
-                type="submit"
+          <button
+            type="submit"
                 disabled={isSubmitting}
                 className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transform transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+          >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
-              </button>
+          </button>
             </div>
-          </form>
+        </form>
         </div>
       </div>
     </div>

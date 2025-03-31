@@ -1,36 +1,44 @@
 import { useEffect, useRef } from "react";
-import { useInView, useMotionValue, useSpring } from "framer-motion";
-import convertQuantity from "@/lib/convertQuantity";
-export default function Counter({
-  value,
-  direction = "up",
-}: {
+import { motion, useAnimation } from "framer-motion";
+
+interface CounterProps {
   value: number;
-  direction?: "up" | "down";
-}) {
+  className?: string;
+}
+
+export const Counter = ({ value, className = '' }: CounterProps) => {
+  const controls = useAnimation();
   const ref = useRef<HTMLSpanElement>(null);
-  const motionValue = useMotionValue(direction === "down" ? value : 0);
-  const springValue = useSpring(motionValue, {
-    damping: 100,
-    stiffness: 100,
-  });
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   useEffect(() => {
-    if (isInView) {
-      motionValue.set(direction === "down" ? 0 : value);
-    }
-  }, [motionValue, isInView]);
-
-  useEffect(
-    () =>
-      springValue.on("change", (latest) => {
-        if (ref.current) {
-          ref.current.textContent = convertQuantity(Number(latest.toFixed(0)));
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          controls.start({
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.5 }
+          });
         }
-      }),
-    [springValue],
-  );
+      },
+      { threshold: 0.1 }
+    );
 
-  return <span ref={ref} />;
-}
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [controls]);
+
+  return (
+    <motion.span
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={controls}
+      className={className}
+    >
+      {value}
+    </motion.span>
+  );
+};
