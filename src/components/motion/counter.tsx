@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useInView, useMotionValue, useSpring } from "framer-motion";
 import convertQuantity from "@/lib/convertQuantity";
 
-export default function Counter({
+export default function counter({
   value,
   direction = "up",
 }: {
