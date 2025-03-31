@@ -9,49 +9,52 @@ import Homepage from "./routes/home";
 import { Generate } from "./components/generate";
 import { Dashboard } from "./routes/dashboard";
 import { CreateEditPage } from "./routes/create-edit-page";
-import ResumeBuilder from "./components/Resume/resume-builder";
-import ContactUs from "./routes/ContactUs";
 import { MockLoadPage } from "./routes/mock-load-page";
 import { MockInterviewPage } from "./routes/mock-interview-page"; // Ensure this file exists
 import { Feedback } from "./routes/feedback";
 import ServicesPage from "./routes/Services";  
 import About from "./routes/AboutUs";
+import { ResumeProvider } from "./context/ResumeContext";
+import ResumeBuilder from "./components/Resume/ResumeBuilder";
+import ContactUs from "./routes/ContactUs";
+
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        {/* public routes */}
-        <Route element={<PublicLayout />}>
-          <Route index element={<Homepage />} />
-          <Route path="/contact" element={<ContactUs />} /> 
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/about" element={<About />} />
-        </Route>
-
-        {/* authentication routes */}
-        <Route element={<AuthenicationLayout />}>
-          <Route path="/signin/*" element={<SignInPage />} />
-          <Route path="/signup/*" element={<SignUpPage />} />
-        </Route>
-
-        {/* protected routes (example) */}
-        <Route element={<ProtectRoutes> <ResumeBuilder /> </ProtectRoutes>} path="/resume-builder" />
-        <Route element={<ProtectRoutes> <MainLayout /> </ProtectRoutes>}> 
-        
-          {/* all the Protected Routes */}
-          <Route element={<Generate />} path="/generate/">
-            <Route index element={<Dashboard />} />
-            <Route path=":interviewId" element={<CreateEditPage />} />
-            <Route path="interview/:interviewId" element={<MockLoadPage />}  />
-            <Route 
-              path="interview/:interviewId/start" 
-              element={<MockInterviewPage />} 
-            />
-            <Route path="feedback/:interviewId" element={<Feedback />} />
+    <ResumeProvider>
+      <Router>
+        <Routes>
+          {/* public routes */}
+          <Route element={<PublicLayout />}>
+            <Route index element={<Homepage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/resumebuilder" element={<ResumeBuilder />} />
+            <Route path="/contact" element={<ContactUs />} />
           </Route>
-        </Route> 
-      </Routes>
-    </Router>
+
+          {/* authentication routes */}
+          <Route element={<AuthenicationLayout />}>
+            <Route path="/signin/*" element={<SignInPage />} />
+            <Route path="/signup/*" element={<SignUpPage />} />
+          </Route>
+          {/* protected routes */}
+          <Route element={<ProtectRoutes> <MainLayout /> </ProtectRoutes>}> 
+          
+            {/* all the Protected Routes */}
+            <Route element={<Generate />} path="/generate/">
+              <Route index element={<Dashboard />} />
+              <Route path=":interviewId" element={<CreateEditPage />} />
+              <Route path="interview/:interviewId" element={<MockLoadPage />}  />
+              <Route 
+                path="interview/:interviewId/start" 
+                element={<MockInterviewPage />} 
+              />
+              <Route path="feedback/:interviewId" element={<Feedback />} />
+            </Route>
+          </Route> 
+        </Routes>
+      </Router>
+    </ResumeProvider>
   );
 };
 

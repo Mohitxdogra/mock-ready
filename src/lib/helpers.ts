@@ -6,7 +6,7 @@ export const MainRoutes=[
 
     {
         label:"Contact Us",
-        href:"/Contact",
+        href:"/contact",
         },
 
         {
@@ -23,6 +23,6 @@ export const MainRoutes=[
                 //     },
                 {
                     label: "Resume", // Fix: "REsume" ko "Resume" kiya for consistency
-                    href: "/resume-builder", // Fix: Route ke naam lowercase aur hyphenated rakhna best practice hai
+                    href: "/resumebuilder", // Fix: Route ke naam lowercase aur hyphenated rakhna best practice hai
                   }
 ];
