@@ -7,14 +7,13 @@ import { NavLink } from "react-router-dom";
 import { ProfileContainer } from "./profile-container";
 import { ToggleContainer } from "./toggle-container";
 
-
 const Header = () => {
   const { userId } = useAuth();
 
   return (
-    <header className={cn("w-full border-b duration-150 transition-all ease-in-out")}>
+    <header className={cn("w-full bg-gray-900 border-b border-gray-800 sticky top-0 z-50")}>
       <Container>
-        <div className="flex items-center gap-4 w-full">
+        <div className="flex items-center gap-4 w-full py-4">
           {/* Logo section */}
           <LogoContainer />
 
@@ -25,8 +24,10 @@ const Header = () => {
               <NavLink
                 to={"/generate"}
                 className={({ isActive }) =>
-                  cn("text-base text-neutral-600", 
-                    isActive && "text-neutral-900 font-semibold")
+                  cn(
+                    "text-base text-gray-300 hover:text-white transition-colors duration-200",
+                    isActive && "text-blue-500 font-semibold"
+                  )
                 }
               >
                 Take an Interview
@@ -38,9 +39,6 @@ const Header = () => {
           <div className="ml-auto flex items-center gap-6">
             {/* Profile Section */}
             <ProfileContainer />
-
-            {/* Dark Mode Toggle */}
-            
 
             {/* Mobile Toggle Section */}
             <ToggleContainer />
