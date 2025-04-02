@@ -88,6 +88,12 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
               question={tab}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
+              onNextQuestion={() => {
+                const currentIndex = questions.findIndex(q => q.question === activeQuestion);
+                if (currentIndex < questions.length - 1) {
+                  setActiveQuestion(questions[currentIndex + 1].question);
+                }
+              }}
             />
           </TabsContent>
         ))}

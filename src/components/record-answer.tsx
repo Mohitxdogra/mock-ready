@@ -4,178 +4,137 @@ import {
   CircleStop,
   Loader,
   Mic,
-  RefreshCw,
   Save,
   Video,
   VideoOff,
   WebcamIcon,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import useSpeechToText from "react-hook-speech-to-text";
 import { useParams } from "react-router-dom";
 import WebCam from "react-webcam";
 import { TooltipButton } from "./tooltip-button";
 import { toast } from "sonner";
-import { chatSession } from "../scripts/index";
-import { SaveModal } from "./save-modal";
 import {
   addDoc,
+  updateDoc,
+  doc,
   collection,
+  serverTimestamp,
   getDocs,
   query,
-  serverTimestamp,
   where,
 } from "firebase/firestore";
 import { db } from "@/config/firebase.config";
+import { SaveModal } from "./save-modal";
 
 interface RecordAnswerProps {
   question: { question: string; answer: string };
   isWebCam: boolean;
   setIsWebCam: (value: boolean) => void;
+  onNextQuestion: () => void;
 }
 
-interface AIResponse {
-  ratings: number;
-  feedback: string;
-}
-
-export const RecordAnswer = ({ question, isWebCam, setIsWebCam }: RecordAnswerProps) => {
-  const { interimResult, isRecording, results, startSpeechToText, stopSpeechToText } = useSpeechToText({
+export const RecordAnswer = ({ question, isWebCam, setIsWebCam, onNextQuestion }: RecordAnswerProps) => {
+  const { isRecording, results, startSpeechToText, stopSpeechToText } = useSpeechToText({
     continuous: true,
     useLegacyResults: false,
   });
 
   const [userAnswer, setUserAnswer] = useState("");
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [aiResult, setAiResult] = useState<AIResponse | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
 
   const { userId } = useAuth();
   const { interviewId } = useParams();
 
-  const recordUserAnswer = async () => {
+  useEffect(() => {
+    if (results.length > 0) {
+      const lastResult = results[results.length - 1];
+      const newText = typeof lastResult === "string" ? lastResult : lastResult.transcript;
+      setUserAnswer((prev) => prev + " " + newText);
+    }
+  }, [results]);
+
+  useEffect(() => {
+    const fetchSavedAnswer = async () => {
+      if (!userId || !interviewId) return;
+      const q = query(
+        collection(db, "userAnswers"),
+        where("mockIdRef", "==", interviewId),
+        where("question", "==", question.question),
+        where("userId", "==", userId)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const savedData = querySnapshot.docs[0].data();
+        setUserAnswer(savedData.user_ans);
+        setIsSaved(true);
+      }
+    };
+    fetchSavedAnswer();
+  }, [question, interviewId, userId]);
+
+  const recordUserAnswer = () => {
     if (isRecording) {
       stopSpeechToText();
-      if (userAnswer?.length < 30) {
-        toast.error("Your answer should be more than 30 characters");
-        return;
-      }
-      setAiResult(await generateResult(question.question, question.answer, userAnswer));
     } else {
+      setStartTime(Date.now());
       startSpeechToText();
-    }
-  };
-
-  const cleanJsonResponse = (responseText: string): AIResponse => {
-    let cleanText = responseText.trim().replace(/(```|json|`)/g, "");
-    try {
-      return JSON.parse(cleanText);
-    } catch (error) {
-      console.error("Error parsing AI response:", error);
-      return { ratings: 0, feedback: "Unable to generate valid feedback" };
-    }
-  };
-
-  const generateResult = async (qst: string, qstAns: string, userAns: string): Promise<AIResponse> => {
-    setIsAiGenerating(true);
-    const prompt = `
-      Question: "${qst}"
-      User Answer: "${userAns}"
-      Correct Answer: "${qstAns}"
-      Please compare and rate (1-10) with feedback in JSON format: {"ratings": number, "feedback": string}.
-    `;
-    try {
-      const aiResult = await chatSession.sendMessage(prompt);
-      const parsedResult = cleanJsonResponse(await aiResult.response.text());
-      if (!parsedResult?.ratings || !parsedResult?.feedback) {
-        throw new Error("Incomplete AI response");
-      }
-      return parsedResult;
-    } catch (error) {
-      toast.error("An error occurred while generating feedback.");
-      console.error("Error while generating feedback:", error);
-      return { ratings: 0, feedback: "Unable to generate feedback" };
-    } finally {
-      setIsAiGenerating(false);
     }
   };
 
   const saveUserAnswer = async () => {
     setLoading(true);
-    if (!aiResult) return;
+    if (userAnswer.length < 30) {
+      toast.error("Your answer should be more than 30 characters");
+      setLoading(false);
+      return;
+    }
+    const responseTime = startTime ? Date.now() - startTime : 0;
     try {
-      const userAnswerQuery = query(
-        collection(db, "userAnswers"),
-        where("userId", "==", userId),
-        where("question", "==", question.question)
-      );
-      if (!(await getDocs(userAnswerQuery)).empty) {
-        toast.info("You have already answered this question");
-        return;
-      }
-      await addDoc(collection(db, "userAnswers"), {
+      const docRef = await addDoc(collection(db, "userAnswers"), {
         mockIdRef: interviewId,
         question: question.question,
         correct_ans: question.answer,
         user_ans: userAnswer,
-        feedback: aiResult.feedback,
-        rating: aiResult.ratings,
         userId,
+        responseTime,
         createdAt: serverTimestamp(),
       });
+      await updateDoc(doc(db, "userAnswers", docRef.id), { id: docRef.id });
       toast.success("Your answer has been saved.");
+      setIsSaved(true);
     } catch (error) {
       toast.error("An error occurred while saving.");
-      console.error("Error while saving:", error);
     } finally {
       setLoading(false);
       setOpen(false);
     }
   };
 
-  const handleSpeechResults = useCallback(() => {
-    setUserAnswer(results.join(" "));
-  }, [results]);
-
-  useEffect(() => {
-    handleSpeechResults();
-  }, [results, handleSpeechResults]);
-
   return (
     <div className="w-full flex flex-col items-center gap-8 mt-4">
       <SaveModal isOpen={open} onClose={() => setOpen(false)} onConfirm={saveUserAnswer} loading={loading} />
       <div className="flex flex-col md:flex-row w-full gap-4">
-        {/* Left Section: Your Answer */}
         <div className="flex-1 p-4 border rounded-md bg-gray-50">
           <h2 className="text-lg font-semibold">Your Answer:</h2>
           <p className="text-sm mt-2 text-gray-700">{userAnswer || "Start recording to see your answer here"}</p>
-          {interimResult && (
-            <p className="text-sm text-gray-500 mt-2">
-              <strong>Current Speech:</strong> {interimResult}
-            </p>
-          )}
         </div>
-
-        {/* Right Section: Webcam */}
         <div className="flex-1 flex flex-col items-center justify-center border p-4 bg-gray-50 rounded-md">
-          <div className="flex justify-center mb-4">
-            {isWebCam ? (
-              <WebCam className="w-[250px] h-[250px] object-cover rounded-md" /> // Reduced size of the webcam
-            ) : (
-              <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />
-            )}
-          </div>
-
-          {/* Buttons aligned horizontally next to the webcam */}
-          <div className="flex justify-center gap-4">
+          {isWebCam ? <WebCam className="w-[250px] h-[250px] object-cover rounded-md" /> : <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />}
+          <div className="flex justify-center gap-4 mt-4">
             <TooltipButton content={isWebCam ? "Turn Off" : "Turn On"} icon={isWebCam ? <VideoOff /> : <Video />} onClick={() => setIsWebCam(!isWebCam)} />
             <TooltipButton content={isRecording ? "Stop Recording" : "Start Recording"} icon={isRecording ? <CircleStop /> : <Mic />} onClick={recordUserAnswer} />
-            <TooltipButton content="Record Again" icon={<RefreshCw />} onClick={() => { setUserAnswer(""); startSpeechToText(); }} />
-            <TooltipButton content="Save Result" icon={isAiGenerating ? <Loader className="animate-spin" /> : <Save />} onClick={() => setOpen(true)} disabled={!aiResult || isAiGenerating} />
+            <TooltipButton content="Save Result" icon={loading ? <Loader className="animate-spin" /> : <Save />} onClick={() => setOpen(true)} disabled={loading} />
           </div>
         </div>
       </div>
+      <button className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" onClick={onNextQuestion} disabled={!isSaved}>
+        Next Question
+      </button>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { db } from "@/config/firebase.config";
 import { Interview } from "@/types";
 import { doc, getDoc } from "firebase/firestore";
@@ -9,52 +8,42 @@ import { CustomBreadCrumb } from "@/components/custom-bread-crumb";
 import { Button } from "@/components/ui/button";
 import { Lightbulb, Sparkles, WebcamIcon } from "lucide-react";
 import { InterviewPin } from "@/components/pin";
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import WebCam from "react-webcam";
 
 export const MockLoadPage = () => {
   const { interviewId } = useParams<{ interviewId: string }>();
   const [interview, setInterview] = useState<Interview | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isWebCamEnabled, setIsWebCamEnabled] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    setIsLoading(true);
+    if (!interviewId) {
+      navigate("/generate", { replace: true });
+      return;
+    }
+
     const fetchInterview = async () => {
-      if (interviewId) {
-        try {
-          const interviewDoc = await getDoc(doc(db, "interviews", interviewId));
-          if (interviewDoc.exists()) {
-            setInterview({
-              id: interviewDoc.id,
-              ...interviewDoc.data(),
-            } as Interview);
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setIsLoading(false);
+      try {
+        const interviewDoc = await getDoc(doc(db, "interviews", interviewId));
+        if (interviewDoc.exists()) {
+          setInterview({ id: interviewDoc.id, ...interviewDoc.data() } as Interview);
+        } else {
+          navigate("/generate", { replace: true });
         }
+      } catch (error) {
+        console.error("Error fetching interview:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchInterview();
-  }, [interviewId, navigate]);
+  }, [interviewId]);
 
-  if (isLoading) {
-    return <LoaderPage className="w-full h-[70vh]" />;
-  }
-
-  if (!interviewId) {
-    navigate("/generate", { replace: true });
-  }
-
-  if (!interview) {
-    navigate("/generate", { replace: true });
-  }
+  if (isLoading) return <LoaderPage className="w-full h-[70vh]" />;
+  if (!interview) return null; // Prevents unnecessary rendering before navigation
 
   return (
     <div className="flex flex-col w-full gap-8 py-5">
@@ -71,7 +60,7 @@ export const MockLoadPage = () => {
         </Link>
       </div>
 
-      {interview && <InterviewPin interview={interview} onMockPage />}
+      <InterviewPin interview={interview} onMockPage />
 
       <Alert className="bg-yellow-100/50 border-yellow-200 p-4 rounded-lg flex items-start gap-3 -mt-3">
         <Lightbulb className="h-5 w-5 text-yellow-600" />
@@ -80,14 +69,12 @@ export const MockLoadPage = () => {
             Important Information
           </AlertTitle>
           <AlertDescription className="text-sm text-yellow-700 mt-1">
-            Please enable your webcam and microphone to start the AI-generated
-            mock interview. The interview consists of five questions. You’ll
-            receive a personalized report based on your responses at the end.{" "}
+            Please enable your webcam and microphone to start the AI-generated mock interview. 
+            The interview consists of five questions. You’ll receive a personalized report at the end.
             <br />
             <br />
-            <span className="font-medium">Note:</span> Your video is{" "}
-            <strong>never recorded</strong>. You can disable your webcam at any
-            time.
+            <span className="font-medium">Note:</span> Your video is <strong>never recorded</strong>. 
+            You can disable your webcam at any time.
           </AlertDescription>
         </div>
       </Alert>
