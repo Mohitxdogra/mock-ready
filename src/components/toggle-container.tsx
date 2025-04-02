@@ -10,21 +10,23 @@ import { NavigationRoutes } from "./Navigation-routes";
 import { useAuth } from "@clerk/clerk-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export const ToggleContainer = () => {
   const { userId } = useAuth();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet>
-      <SheetTrigger className="block md:hidden text-white">
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger className="block md:hidden text-white" onClick={() => setOpen(true)}>
         <Menu className="h-6 w-6 text-white" />
       </SheetTrigger>
       <SheetContent className="bg-[#0f172a] border-none text-white">
         <SheetHeader>
-          <SheetTitle className="text-white">Navigation</SheetTitle>
+          <SheetTitle className="text-white"></SheetTitle>
         </SheetHeader>
         <nav className="gap-6 flex flex-col items-start">
-          <NavigationRoutes isMobile />
+          <NavigationRoutes isMobile onClose={() => setOpen(false)} />
           {userId && (
             <NavLink
               to={"/generate"}
@@ -34,6 +36,7 @@ export const ToggleContainer = () => {
                   isActive && "text-white font-semibold"
                 )
               }
+              onClick={() => setOpen(false)}
             >
               Take An Interview
             </NavLink>

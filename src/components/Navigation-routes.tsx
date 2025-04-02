@@ -4,10 +4,12 @@ import { NavLink } from "react-router-dom";
 
 interface NavigationRoutesProps {
   isMobile?: boolean;
+  onClose?: () => void; // Added prop
 }
 
 export const NavigationRoutes = ({
   isMobile = false,
+  onClose, // Destructure onClose
 }: NavigationRoutesProps) => {
   return (
     <ul
@@ -26,6 +28,7 @@ export const NavigationRoutes = ({
               isActive && "text-blue-500 font-semibold"
             )
           }
+          onClick={onClose} // Close menu on click
         >
           {route.label}
         </NavLink>
