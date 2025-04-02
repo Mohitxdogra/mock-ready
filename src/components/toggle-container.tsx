@@ -16,12 +16,12 @@ export const ToggleContainer = () => {
 
   return (
     <Sheet>
-      <SheetTrigger className="block md:hidden">
-        <Menu />
+      <SheetTrigger className="block md:hidden text-white">
+        <Menu className="h-6 w-6 text-white" />
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="bg-[#0f172a] border-none text-white">
         <SheetHeader>
-          <SheetTitle />
+          <SheetTitle className="text-white">Navigation</SheetTitle>
         </SheetHeader>
         <nav className="gap-6 flex flex-col items-start">
           <NavigationRoutes isMobile />
@@ -30,8 +30,8 @@ export const ToggleContainer = () => {
               to={"/generate"}
               className={({ isActive }) =>
                 cn(
-                  "text-base text-neutral-600",
-                  isActive && "text-neutral-900 font-semibold"
+                  "text-base text-gray-300 hover:text-white transition-colors",
+                  isActive && "text-white font-semibold"
                 )
               }
             >

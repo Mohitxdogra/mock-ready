@@ -22,7 +22,8 @@ const HomePage = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <Link to="/generate">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-blue-500/30 transform transition-all hover:scale-105">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg
+                 shadow-blue-500/30 transform transition-all hover:scale-105">
                   Get Started
                   <Sparkles className="ml-2 h-5 w-5 text-yellow-300" />
                 </Button>

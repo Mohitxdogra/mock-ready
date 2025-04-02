@@ -1,4 +1,4 @@
-import { Interview } from "@/types";
+// Removed unused import
 
 interface GenerateAIResultParams {
   position: string;
