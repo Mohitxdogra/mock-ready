@@ -126,28 +126,20 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
             onChange={(e) => updatePersonalInfo('location', e.target.value)}
             className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="LinkedIn Username"
-                value={data.personalInfo.linkedin}
-                onChange={(e) => updatePersonalInfo('linkedin', e.target.value)}
-                className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700"
-              />
-              <SpeechToText onTextChange={(text) => updatePersonalInfo('linkedin', text)} field="LinkedIn Username" />
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="GitHub Username"
-                value={data.personalInfo.github}
-                onChange={(e) => updatePersonalInfo('github', e.target.value)}
-                className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700"
-              />
-              <SpeechToText onTextChange={(text) => updatePersonalInfo('github', text)} field="GitHub Username" />
-            </div>
-          </div>
+          <input
+            type="text"
+            placeholder="LinkedIn Profile"
+            value={data.personalInfo.linkedin}
+            onChange={(e) => updatePersonalInfo('linkedin', e.target.value)}
+            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+          />
+          <input
+            type="text"
+            placeholder="GitHub Profile"
+            value={data.personalInfo.github}
+            onChange={(e) => updatePersonalInfo('github', e.target.value)}
+            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+          />
           <div className="flex gap-2">
             <textarea
               placeholder="Professional Summary"
