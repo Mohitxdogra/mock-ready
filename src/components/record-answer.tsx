@@ -1,18 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useAuth } from "@clerk/clerk-react";
 import {
   CircleStop,
+  Delete,
   Loader,
   Mic,
   RefreshCw,
-  Save,
   Video,
   VideoOff,
   WebcamIcon,
+  ArrowRight,
+  Save,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import useSpeechToText, { ResultType } from "react-hook-speech-to-text";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import WebCam from "react-webcam";
 import { TooltipButton } from "./tooltip-button";
 import { toast } from "sonner";
@@ -21,6 +22,8 @@ import { SaveModal } from "./save-modal";
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   query,
   serverTimestamp,
@@ -32,6 +35,9 @@ interface RecordAnswerProps {
   question: { question: string; answer: string };
   isWebCam: boolean;
   setIsWebCam: (value: boolean) => void;
+  totalQuestions: number;
+  currentQuestionNumber: number;
+  setCurrentQuestionNumber: (value: number) => void;
 }
 
 interface AIResponse {
@@ -43,6 +49,9 @@ export const RecordAnswer = ({
   question,
   isWebCam,
   setIsWebCam,
+  totalQuestions,
+  currentQuestionNumber,
+  setCurrentQuestionNumber,
 }: RecordAnswerProps) => {
   const {
     interimResult,
@@ -53,6 +62,7 @@ export const RecordAnswer = ({
   } = useSpeechToText({
     continuous: true,
     useLegacyResults: false,
+    // Remove the speechRecognitionOptions if it's causing issues
   });
 
   const [userAnswer, setUserAnswer] = useState("");
@@ -60,23 +70,82 @@ export const RecordAnswer = ({
   const [aiResult, setAiResult] = useState<AIResponse | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [silenceDetected, setSilenceDetected] = useState(false);
+  const [savedDocId, setSavedDocId] = useState<string | null>(null);
+  
+  const silenceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const { userId } = useAuth();
   const { interviewId } = useParams();
+  const navigate = useNavigate();
+
+  // Load previous answer when component mounts or question changes
+  useEffect(() => {
+    const loadPreviousAnswer = async () => {
+      if (!userId || !interviewId) return;
+
+      try {
+        const userAnswerQuery = query(
+          collection(db, "userAnswers"),
+          where("userId", "==", userId),
+          where("question", "==", question.question),
+          where("mockIdRef", "==", interviewId)
+        );
+
+        const querySnap = await getDocs(userAnswerQuery);
+        
+        if (!querySnap.empty) {
+          const doc = querySnap.docs[0];
+          setUserAnswer(doc.data().user_ans);
+          setSavedDocId(doc.id);
+          setAiResult({
+            ratings: doc.data().rating,
+            feedback: doc.data().feedback
+          });
+        } else {
+          // Reset state if no previous answer found
+          setUserAnswer("");
+          setAiResult(null);
+          setSavedDocId(null);
+        }
+      } catch (error) {
+        console.error("Error loading previous answer:", error);
+        // Reset state on error
+        setUserAnswer("");
+        setAiResult(null);
+        setSavedDocId(null);
+      }
+    };
+
+    loadPreviousAnswer();
+  }, [question.question, userId, interviewId]);
+
+  const detectSilence = () => {
+    // Reset any existing timer
+    if (silenceTimer.current) {
+      clearTimeout(silenceTimer.current);
+    }
+    
+    // Set a new timer that starts recording after 1 second of silence
+    silenceTimer.current = setTimeout(() => {
+      setSilenceDetected(true);
+      startSpeechToText();
+    }, 1000);
+  };
 
   const recordUserAnswer = async () => {
     if (isRecording) {
       stopSpeechToText();
+      setSilenceDetected(false);
 
       if (userAnswer?.length < 30) {
         toast.error("Error", {
           description: "Your answer should be more than 30 characters",
         });
-
         return;
       }
 
-      //   ai result
+      // Generate AI result
       const aiResult = await generateResult(
         question.question,
         question.answer,
@@ -84,8 +153,11 @@ export const RecordAnswer = ({
       );
 
       setAiResult(aiResult);
+      
+      // Automatically save to Firebase
+      saveToFirebase(aiResult);
     } else {
-      startSpeechToText();
+      detectSilence();
     }
   };
 
@@ -96,7 +168,7 @@ export const RecordAnswer = ({
     // Step 2: Remove any occurrences of "json" or code block symbols (``` or `)
     cleanText = cleanText.replace(/(json|```|`)/g, "");
 
-    // Step 3: Parse the clean JSON text into an array of objects
+    // Step 3: Parse the clean JSON text into an object
     try {
       return JSON.parse(cleanText);
     } catch (error) {
@@ -139,63 +211,87 @@ export const RecordAnswer = ({
   const recordNewAnswer = () => {
     setUserAnswer("");
     stopSpeechToText();
-    startSpeechToText();
+    detectSilence();
   };
 
-  const saveUserAnswer = async () => {
+  const saveToFirebase = async (result: AIResponse) => {
+    if (!result) return;
+    
     setLoading(true);
-
-    if (!aiResult) {
-      return;
-    }
-
     const currentQuestion = question.question;
+    
     try {
-      // query the firbase to check if the user answer already exists for this question
-
+      // Check if the user already answered this question
       const userAnswerQuery = query(
         collection(db, "userAnswers"),
         where("userId", "==", userId),
-        where("question", "==", currentQuestion)
+        where("question", "==", currentQuestion),
+        where("mockIdRef", "==", interviewId)
       );
 
       const querySnap = await getDocs(userAnswerQuery);
 
-      // if the user already answerd the question dont save it again
       if (!querySnap.empty) {
-        console.log("Query Snap Size", querySnap.size);
-        toast.info("Already Answered", {
-          description: "You have already answered this question",
+        // Update existing answer
+        const docId = querySnap.docs[0].id;
+        await deleteDoc(doc(db, "userAnswers", docId));
+        toast.info("Previous answer updated", {
+          description: "Your previous answer has been replaced",
         });
-        return;
-      } else {
-        // save the user answer
-
-        await addDoc(collection(db, "userAnswers"), {
-          mockIdRef: interviewId,
-          question: question.question,
-          correct_ans: question.answer,
-          user_ans: userAnswer,
-          feedback: aiResult.feedback,
-          rating: aiResult.ratings,
-          userId,
-          createdAt: serverTimestamp(),
-        });
-
-        toast("Saved", { description: "Your answer has been saved.." });
       }
+      
+      // Save the user answer
+      const docRef = await addDoc(collection(db, "userAnswers"), {
+        mockIdRef: interviewId,
+        question: question.question,
+        correct_ans: question.answer,
+        user_ans: userAnswer,
+        feedback: result.feedback,
+        rating: result.ratings,
+        userId,
+        createdAt: serverTimestamp(),
+      });
 
-      setUserAnswer("");
-      stopSpeechToText();
+      setSavedDocId(docRef.id);
+      toast("Saved", { description: "Your answer has been saved successfully" });
+      
+      // Move to next question if not on the last question
+      if (currentQuestionNumber < totalQuestions) {
+        setCurrentQuestionNumber(currentQuestionNumber + 1);
+      }
+      
     } catch (error) {
       toast("Error", {
-        description: "An error occurred while generating feedback.",
+        description: "An error occurred while saving your answer.",
       });
       console.log(error);
     } finally {
       setLoading(false);
-      setOpen(!open);
     }
+  };
+
+  const deleteAnswer = async () => {
+    if (!savedDocId) return;
+    
+    try {
+      await deleteDoc(doc(db, "userAnswers", savedDocId));
+      setUserAnswer("");
+      setAiResult(null);
+      setSavedDocId(null);
+      toast("Deleted", { description: "Your answer has been deleted" });
+    } catch (error) {
+      toast("Error", {
+        description: "An error occurred while deleting your answer.",
+      });
+      console.log(error);
+    }
+  };
+
+  const handleFinishInterview = async () => {
+    if (!savedDocId && aiResult) {
+      await saveToFirebase(aiResult);
+    }
+    navigate("/generate");
   };
 
   useEffect(() => {
@@ -207,87 +303,160 @@ export const RecordAnswer = ({
     setUserAnswer(combineTranscripts);
   }, [results]);
 
+  useEffect(() => {
+    // Cleanup silence detection timer on unmount
+    return () => {
+      if (silenceTimer.current) {
+        clearTimeout(silenceTimer.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="w-full flex flex-col items-center gap-8 mt-4">
-      {/* save modal */}
+    <div className="w-full flex flex-col md:flex-row gap-8 mt-4">
+      {/* Answer Section - Left Side */}
+      <div className="w-full md:w-1/2 flex flex-col gap-6">
+        <div className="w-full p-6 border rounded-lg bg-blue-50 shadow-md flex-grow">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-blue-800">Your Answer:</h2>
+            <TooltipButton
+              content="Delete Answer"
+              icon={<Delete className="w-6 h-6" />}
+              onClick={deleteAnswer}
+              disabled={!savedDocId}
+              buttonClassName="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg"
+            />
+          </div>
+          <div className="min-h-[200px] md:min-h-[300px] bg-white rounded-lg p-4 border">
+            <p className="text-base text-gray-700 whitespace-normal">
+              {userAnswer || "Start recording to see your answer here"}
+            </p>
+            {interimResult && (
+              <p className="text-sm text-blue-600 mt-2">
+                <strong>Current Speech:</strong> {interimResult}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {aiResult && (
+          <div className="w-full p-6 border rounded-lg bg-blue-50 shadow-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-blue-800">Feedback:</h2>
+              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium text-lg">
+                Rating: {aiResult.ratings}/10
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-base text-gray-700">
+                {isAiGenerating ? (
+                  <div className="flex items-center gap-2">
+                    <Loader className="w-5 h-5 animate-spin" />
+                    <span>Generating feedback...</span>
+                  </div>
+                ) : (
+                  aiResult.feedback
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {silenceDetected && !isRecording && (
+          <div className="w-full p-4 border rounded-lg bg-yellow-50 shadow-md">
+            <p className="text-base text-yellow-700">
+              Listening for speech to begin recording...
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Webcam Section - Right Side */}
+      <div className="w-full md:w-1/2 flex flex-col items-center gap-6">
+        <div className="w-full h-[300px] md:h-[500px] flex flex-col items-center justify-center border-2 p-4 bg-blue-50 rounded-lg shadow-md">
+          {isWebCam ? (
+            <WebCam
+              onUserMedia={() => setIsWebCam(true)}
+              onUserMediaError={() => setIsWebCam(false)}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          ) : (
+            <WebcamIcon className="w-32 h-32 text-blue-300" />
+          )}
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-4 w-full">
+          <TooltipButton
+            content={isWebCam ? "Turn Off Camera" : "Turn On Camera"}
+            icon={
+              isWebCam ? (
+                <VideoOff className="w-6 h-6" />
+              ) : (
+                <Video className="w-6 h-6" />
+              )
+            }
+            onClick={() => setIsWebCam(!isWebCam)}
+            buttonClassName="bg-blue-100 hover:bg-blue-200 text-blue-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+          />
+
+          <TooltipButton
+            content={isRecording ? "Stop Recording" : "Start Recording"}
+            icon={
+              isRecording ? (
+                <CircleStop className="w-6 h-6" />
+              ) : silenceDetected ? (
+                <Loader className="w-6 h-6 animate-spin" />
+              ) : (
+                <Mic className="w-6 h-6" />
+              )
+            }
+            onClick={recordUserAnswer}
+            disabled={isAiGenerating}
+            buttonClassName="bg-green-100 hover:bg-green-200 text-green-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+          />
+
+          <TooltipButton
+            content="Save Answer"
+            icon={<Save className="w-6 h-6" />}
+            onClick={() => saveToFirebase(aiResult!)}
+            disabled={!aiResult || loading}
+            buttonClassName={`${
+              loading 
+                ? 'bg-gray-100 text-gray-400' 
+                : 'bg-purple-100 hover:bg-purple-200 text-purple-700 hover:scale-105'
+            } p-3 rounded-full shadow-md transition-all duration-300 relative`}
+          />
+
+          <TooltipButton
+            content="Record Again"
+            icon={<RefreshCw className="w-6 h-6" />}
+            onClick={recordNewAnswer}
+            buttonClassName="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+          />
+        </div>
+
+        {/* Only show Finish button on last question */}
+        {Boolean(currentQuestionNumber) && Boolean(totalQuestions) && currentQuestionNumber === totalQuestions && (
+          <div className="flex justify-center mt-6">
+            <TooltipButton
+              content="Finish Interview"
+              icon={<ArrowRight className="w-6 h-6" />}
+              onClick={handleFinishInterview}
+              disabled={!aiResult}
+              buttonClassName="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg transition-all duration-300 hover:scale-105"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Save modal */}
       <SaveModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        onConfirm={saveUserAnswer}
+        onConfirm={() => saveToFirebase(aiResult!)}
         loading={loading}
       />
-
-      <div className="w-full h-[400px] md:w-96 flex flex-col items-center justify-center border p-4 bg-gray-50 rounded-md">
-        {isWebCam ? (
-          <WebCam
-            onUserMedia={() => setIsWebCam(true)}
-            onUserMediaError={() => setIsWebCam(false)}
-            className="w-full h-full object-cover rounded-md"
-          />
-        ) : (
-          <WebcamIcon className="min-w-24 min-h-24 text-muted-foreground" />
-        )}
-      </div>
-
-      <div className="flex itece justify-center gap-3">
-        <TooltipButton
-          content={isWebCam ? "Turn Off" : "Turn On"}
-          icon={
-            isWebCam ? (
-              <VideoOff className="min-w-5 min-h-5" />
-            ) : (
-              <Video className="min-w-5 min-h-5" />
-            )
-          }
-          onClick={() => setIsWebCam(!isWebCam)}
-        />
-
-        <TooltipButton
-          content={isRecording ? "Stop Recording" : "Start Recording"}
-          icon={
-            isRecording ? (
-              <CircleStop className="min-w-5 min-h-5" />
-            ) : (
-              <Mic className="min-w-5 min-h-5" />
-            )
-          }
-          onClick={recordUserAnswer}
-        />
-
-        <TooltipButton
-          content="Record Again"
-          icon={<RefreshCw className="min-w-5 min-h-5" />}
-          onClick={recordNewAnswer}
-        />
-
-        <TooltipButton
-          content="Save Result"
-          icon={
-            isAiGenerating ? (
-              <Loader className="min-w-5 min-h-5 animate-spin" />
-            ) : (
-              <Save className="min-w-5 min-h-5" />
-            )
-          }
-          onClick={() => setOpen(!open)}
-          disabled={!aiResult}
-        />
-      </div>
-
-      <div className="w-full mt-4 p-4 border rounded-md bg-gray-50">
-        <h2 className="text-lg font-semibold">Your Answer:</h2>
-
-        <p className="text-sm mt-2 text-gray-700 whitespace-normal">
-          {userAnswer || "Start recording to see your ansewer here"}
-        </p>
-
-        {interimResult && (
-          <p className="text-sm text-gray-500 mt-2">
-            <strong>Current Speech:</strong>
-            {interimResult}
-          </p>
-        )}
-      </div>
     </div>
   );
 };

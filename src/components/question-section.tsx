@@ -12,6 +12,7 @@ interface QuestionSectionProps {
 export const QuestionSection = ({ questions }: QuestionSectionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWebCam, setIsWebCam] = useState(false);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
 
   const [currentSpeech, setCurrentSpeech] =
     useState<SpeechSynthesisUtterance | null>(null);
@@ -44,6 +45,11 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
         defaultValue={questions[0]?.question}
         className="w-full space-y-12"
         orientation="vertical"
+        onValueChange={(value) => {
+          // Find the index of the selected question and update currentQuestionNumber
+          const index = questions.findIndex(q => q.question === value);
+          setCurrentQuestionNumber(index + 1);
+        }}
       >
         <TabsList className="bg-transparent w-full flex flex-wrap items-center justify-start gap-4">
           {questions?.map((tab, i) => (
@@ -83,6 +89,9 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
               question={tab}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
+              totalQuestions={questions.length}
+              currentQuestionNumber={currentQuestionNumber}
+              setCurrentQuestionNumber={setCurrentQuestionNumber}
             />
           </TabsContent>
         ))}
