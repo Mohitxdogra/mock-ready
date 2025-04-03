@@ -63,7 +63,7 @@ export const MockInterviewPage = () => {
   }
 
   return (
-    <div className="flex flex-col w-full gap-8 py-5">
+    <div className="flex flex-col w-full gap-6 py-3 md:py-5 px-2 md:px-4">
       <CustomBreadCrumb
         breadCrumbPage="Start"
         breadCrumpItems={[
@@ -73,24 +73,27 @@ export const MockInterviewPage = () => {
       />
 
       <div className="w-full">
-        <Alert className="bg-sky-100 border border-sky-200 p-4 rounded-lg flex items-start gap-3">
-          <Lightbulb className="h-5 w-5 text-sky-600" />
+        <Alert className="bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-100 p-3 md:p-4 rounded-lg flex items-start gap-2 md:gap-3">
+          <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
           <div>
-            <AlertTitle className="text-sky-800 font-semibold">Important Note</AlertTitle>
-            <AlertDescription className="text-sm text-sky-700 mt-1 leading-relaxed">
-              Press "Record Answer" to begin answering the question. Once you finish the interview, 
-              you&apos;ll receive feedback comparing your responses with the ideal answers.
-              <br />
-              <br />
-              <strong>Note:</strong> <span className="font-medium">Your video is never recorded.</span> 
-              You can disable the webcam anytime if preferred.
+            <AlertTitle className="text-blue-900 font-bold text-base md:text-lg">Important Note</AlertTitle>
+            <AlertDescription className="text-sm text-gray-700 mt-1 leading-relaxed space-y-2">
+              <p>
+                Press <span className="font-semibold text-blue-700">"Record Answer"</span> to begin answering the question. Once you finish the interview, 
+                you'll receive feedback comparing your responses with the ideal answers.
+              </p>
+              <p>
+                <strong className="text-blue-800">Note:</strong>{" "}
+                <span className="font-medium text-gray-900">Your video is never recorded.</span>{" "}
+                You can disable the webcam anytime if preferred.
+              </p>
             </AlertDescription>
           </div>
         </Alert>
       </div>
 
       {interview.questions?.length > 0 && (
-        <div className="mt-4 w-full flex flex-col items-start gap-4">
+        <div className="w-full flex flex-col items-start">
           <QuestionSection questions={interview.questions} />
         </div>
       )}

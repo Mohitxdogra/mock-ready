@@ -313,26 +313,26 @@ export const RecordAnswer = ({
   }, []);
 
   return (
-    <div className="w-full flex flex-col md:flex-row gap-8 mt-4">
+    <div className="w-full flex flex-col md:flex-row gap-4 p-2 md:p-4">
       {/* Answer Section - Left Side */}
-      <div className="w-full md:w-1/2 flex flex-col gap-6">
-        <div className="w-full p-6 border rounded-lg bg-blue-50 shadow-md flex-grow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-blue-800">Your Answer:</h2>
+      <div className="w-full md:w-1/2 flex flex-col gap-3">
+        <div className="w-full p-3 md:p-4 border rounded-lg bg-blue-50 shadow-sm flex-grow">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl md:text-2xl font-semibold text-blue-800">Your Answer:</h2>
             <TooltipButton
               content="Delete Answer"
-              icon={<Delete className="w-6 h-6" />}
+              icon={<Delete className="w-5 h-5" />}
               onClick={deleteAnswer}
               disabled={!savedDocId}
-              buttonClassName="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg"
+              buttonClassName="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded-lg"
             />
           </div>
-          <div className="min-h-[200px] md:min-h-[300px] bg-white rounded-lg p-4 border">
-            <p className="text-base text-gray-700 whitespace-normal">
+          <div className="min-h-[200px] md:min-h-[300px] bg-white rounded-lg p-3 md:p-4 border overflow-auto">
+            <p className="text-base md:text-lg text-gray-700 whitespace-pre-wrap">
               {userAnswer || "Start recording to see your answer here"}
             </p>
             {interimResult && (
-              <p className="text-sm text-blue-600 mt-2">
+              <p className="text-sm md:text-base text-blue-600 mt-2">
                 <strong>Current Speech:</strong> {interimResult}
               </p>
             )}
@@ -340,15 +340,15 @@ export const RecordAnswer = ({
         </div>
 
         {aiResult && (
-          <div className="w-full p-6 border rounded-lg bg-blue-50 shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-blue-800">Feedback:</h2>
-              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium text-lg">
+          <div className="w-full p-3 md:p-4 border rounded-lg bg-blue-50 shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl md:text-2xl font-semibold text-blue-800">Feedback:</h2>
+              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium text-base md:text-lg">
                 Rating: {aiResult.ratings}/10
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 border">
-              <p className="text-base text-gray-700">
+            <div className="bg-white rounded-lg p-3 md:p-4 border">
+              <p className="text-base md:text-lg text-gray-700">
                 {isAiGenerating ? (
                   <div className="flex items-center gap-2">
                     <Loader className="w-5 h-5 animate-spin" />
@@ -363,8 +363,8 @@ export const RecordAnswer = ({
         )}
 
         {silenceDetected && !isRecording && (
-          <div className="w-full p-4 border rounded-lg bg-yellow-50 shadow-md">
-            <p className="text-base text-yellow-700">
+          <div className="w-full p-3 border rounded-lg bg-yellow-50 shadow-sm">
+            <p className="text-base md:text-lg text-yellow-700">
               Listening for speech to begin recording...
             </p>
           </div>
@@ -372,8 +372,8 @@ export const RecordAnswer = ({
       </div>
 
       {/* Webcam Section - Right Side */}
-      <div className="w-full md:w-1/2 flex flex-col items-center gap-6">
-        <div className="w-full h-[300px] md:h-[500px] flex flex-col items-center justify-center border-2 p-4 bg-blue-50 rounded-lg shadow-md">
+      <div className="w-full md:w-1/2 flex flex-col items-center gap-3">
+        <div className="w-full aspect-video md:h-[400px] flex flex-col items-center justify-center border rounded-lg p-3 bg-blue-50 shadow-sm">
           {isWebCam ? (
             <WebCam
               onUserMedia={() => setIsWebCam(true)}
@@ -381,70 +381,70 @@ export const RecordAnswer = ({
               className="w-full h-full object-cover rounded-lg"
             />
           ) : (
-            <WebcamIcon className="w-32 h-32 text-blue-300" />
+            <WebcamIcon className="w-20 h-20 md:w-24 md:h-24 text-blue-300" />
           )}
         </div>
 
         {/* Control Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 w-full">
+        <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full">
           <TooltipButton
             content={isWebCam ? "Turn Off Camera" : "Turn On Camera"}
             icon={
               isWebCam ? (
-                <VideoOff className="w-6 h-6" />
+                <VideoOff className="w-5 h-5" />
               ) : (
-                <Video className="w-6 h-6" />
+                <Video className="w-5 h-5" />
               )
             }
             onClick={() => setIsWebCam(!isWebCam)}
-            buttonClassName="bg-blue-100 hover:bg-blue-200 text-blue-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+            buttonClassName="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 md:p-3 rounded-full shadow-sm transition-all duration-300 hover:scale-105"
           />
 
           <TooltipButton
             content={isRecording ? "Stop Recording" : "Start Recording"}
             icon={
               isRecording ? (
-                <CircleStop className="w-6 h-6" />
+                <CircleStop className="w-5 h-5" />
               ) : silenceDetected ? (
-                <Loader className="w-6 h-6 animate-spin" />
+                <Loader className="w-5 h-5 animate-spin" />
               ) : (
-                <Mic className="w-6 h-6" />
+                <Mic className="w-5 h-5" />
               )
             }
             onClick={recordUserAnswer}
             disabled={isAiGenerating}
-            buttonClassName="bg-green-100 hover:bg-green-200 text-green-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+            buttonClassName="bg-green-100 hover:bg-green-200 text-green-700 p-2 md:p-3 rounded-full shadow-sm transition-all duration-300 hover:scale-105"
           />
 
           <TooltipButton
             content="Save Answer"
-            icon={<Save className="w-6 h-6" />}
+            icon={<Save className="w-5 h-5" />}
             onClick={() => saveToFirebase(aiResult!)}
             disabled={!aiResult || loading}
             buttonClassName={`${
               loading 
                 ? 'bg-gray-100 text-gray-400' 
                 : 'bg-purple-100 hover:bg-purple-200 text-purple-700 hover:scale-105'
-            } p-3 rounded-full shadow-md transition-all duration-300 relative`}
+            } p-2 md:p-3 rounded-full shadow-sm transition-all duration-300 relative`}
           />
 
           <TooltipButton
             content="Record Again"
-            icon={<RefreshCw className="w-6 h-6" />}
+            icon={<RefreshCw className="w-5 h-5" />}
             onClick={recordNewAnswer}
-            buttonClassName="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-3 rounded-full shadow-md transition-all duration-300 hover:scale-105"
+            buttonClassName="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 md:p-3 rounded-full shadow-sm transition-all duration-300 hover:scale-105"
           />
         </div>
 
         {/* Only show Finish button on last question */}
         {Boolean(currentQuestionNumber) && Boolean(totalQuestions) && currentQuestionNumber === totalQuestions && (
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center mt-3 md:mt-4">
             <TooltipButton
               content="Finish Interview"
-              icon={<ArrowRight className="w-6 h-6" />}
+              icon={<ArrowRight className="w-5 h-5" />}
               onClick={handleFinishInterview}
               disabled={!aiResult}
-              buttonClassName="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-medium shadow-lg transition-all duration-300 hover:scale-105"
+              buttonClassName="bg-orange-500 hover:bg-orange-600 text-white px-5 md:px-6 py-2 md:py-2.5 rounded-lg text-base md:text-lg font-medium shadow-sm transition-all duration-300 hover:scale-105"
             />
           </div>
         )}
