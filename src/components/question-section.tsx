@@ -88,6 +88,8 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
               question={tab}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
+              currentQuestionIndex={questions.findIndex(q => q.question === activeQuestion)}
+              totalQuestions={questions.length}
               onNextQuestion={() => {
                 const currentIndex = questions.findIndex(q => q.question === activeQuestion);
                 if (currentIndex < questions.length - 1) {
