@@ -31,6 +31,8 @@ export interface PersonalInfo {
   phone: string
   location: string
   summary: string
+  linkedin: string
+  github: string
 }
 
 export interface ResumeData {

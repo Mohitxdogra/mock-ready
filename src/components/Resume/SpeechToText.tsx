@@ -6,35 +6,30 @@ interface SpeechToTextProps {
   field: string
 }
 
-// Add type definitions for SpeechRecognition
 interface SpeechRecognitionEvent extends Event {
-  results: {
-    [key: number]: {
-      [key: number]: {
-        transcript: string
-      }
-    }
-  }
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
-  error: string
+  error: string;
 }
 
 interface SpeechRecognition extends EventTarget {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  start: () => void
-  stop: () => void
-  onresult: (event: SpeechRecognitionEvent) => void
-  onerror: (event: SpeechRecognitionErrorEvent) => void
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
 }
 
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition
-    webkitSpeechRecognition: new () => SpeechRecognition
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
   }
 }
 
@@ -46,19 +41,23 @@ export default function SpeechToText({ onTextChange, field }: SpeechToTextProps)
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       if (SpeechRecognition) {
-        const recognition = new SpeechRecognition()
+        const recognition = new SpeechRecognition() as unknown as SpeechRecognition
         recognition.continuous = false
         recognition.interimResults = false
         recognition.lang = 'en-US'
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-          const transcript = event.results[0][0].transcript
+          const transcript = event.results[event.resultIndex][0].transcript
           onTextChange(transcript)
           setIsListening(false)
         }
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error)
+          setIsListening(false)
+        }
+
+        recognition.onend = () => {
           setIsListening(false)
         }
 
