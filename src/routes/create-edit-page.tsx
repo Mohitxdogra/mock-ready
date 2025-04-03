@@ -1,36 +1,28 @@
-import { db } from "@/config/firebase.config";
 import { FormMockInterview } from "@/components/form-mock-interview";
+import { db } from "@/config/firebase.config";
 import { Interview } from "@/types";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { toast } from "sonner";
 
 export const CreateEditPage = () => {
-  const { interviewId } = useParams<{ interviewId?: string }>();
+  const { interviewId } = useParams<{ interviewId: string }>();
   const [interview, setInterview] = useState<Interview | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchInterview = async () => {
-      if (!interviewId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const interviewDoc = await getDoc(doc(db, "interviews", interviewId));
-
-        if (interviewDoc.exists()) {
-          setInterview(interviewDoc.data() as Interview);
-        } else {
-          toast.error("Interview not found.");
+      if (interviewId) {
+        try {
+          const interviewDoc = await getDoc(doc(db, "interviews", interviewId));
+          if (interviewDoc.exists()) {
+            setInterview({
+              id: interviewDoc.id,
+              ...interviewDoc.data(),
+            } as Interview);
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.error("Error fetching interview:", error);
-        toast.error("Failed to load interview. Please try again.");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -38,12 +30,8 @@ export const CreateEditPage = () => {
   }, [interviewId]);
 
   return (
-    <div className="my-4 flex flex-col w-full">
-      {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
-      ) : (
-        <FormMockInterview initialData={interview} />
-      )}
+    <div className="my-4 flex-col w-full">
+      <FormMockInterview initialData={interview} />
     </div>
   );
 };

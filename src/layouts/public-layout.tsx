@@ -10,7 +10,9 @@ export const PublicLayout = () => {
     {/* handler to store the user */}
 <AuthHandler/>
 <Header />
+
 <Outlet />
+
 <Footer />
 
     </div>

@@ -1,43 +1,39 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TooltipButton } from "./tooltip-button";
 import { Volume2, VolumeX } from "lucide-react";
 import { RecordAnswer } from "./record-answer";
 
-interface Question {
-  question: string;
-  answer: string;
-}
-
 interface QuestionSectionProps {
-  questions: Question[];
+  questions: { question: string; answer: string }[];
 }
 
 export const QuestionSection = ({ questions }: QuestionSectionProps) => {
-  const [playingQuestion, setPlayingQuestion] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isWebCam, setIsWebCam] = useState(false);
-  const [activeQuestion, setActiveQuestion] = useState<string>(
-    questions.length > 0 ? questions[0].question : ""
-  );
 
-  useEffect(() => {
-    // Stop speech when active question changes
-    window.speechSynthesis.cancel();
-  }, [activeQuestion]);
+  const [currentSpeech, setCurrentSpeech] =
+    useState<SpeechSynthesisUtterance | null>(null);
 
   const handlePlayQuestion = (qst: string) => {
-    window.speechSynthesis.cancel();
-    
-    if (playingQuestion === qst) {
-      setPlayingQuestion(null);
+    if (isPlaying && currentSpeech) {
+      // stop the speech if already playing
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      setCurrentSpeech(null);
     } else {
       if ("speechSynthesis" in window) {
         const speech = new SpeechSynthesisUtterance(qst);
         window.speechSynthesis.speak(speech);
-        setPlayingQuestion(qst);
-        
-        speech.onend = () => setPlayingQuestion(null);
+        setIsPlaying(true);
+        setCurrentSpeech(speech);
+
+        // handle the speech end
+        speech.onend = () => {
+          setIsPlaying(false);
+          setCurrentSpeech(null);
+        };
       }
     }
   };
@@ -45,13 +41,12 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
   return (
     <div className="w-full min-h-96 border rounded-md p-4">
       <Tabs
-        value={activeQuestion}
+        defaultValue={questions[0]?.question}
         className="w-full space-y-12"
         orientation="vertical"
-        onValueChange={(value) => setActiveQuestion(value)}
       >
         <TabsList className="bg-transparent w-full flex flex-wrap items-center justify-start gap-4">
-          {questions.map((tab, i) => (
+          {questions?.map((tab, i) => (
             <TabsTrigger
               className={cn(
                 "data-[state=active]:bg-emerald-200 data-[state=active]:shadow-md text-xs px-2"
@@ -64,17 +59,17 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
           ))}
         </TabsList>
 
-        {questions.map((tab) => (
-          <TabsContent key={tab.question} value={tab.question}>
+        {questions?.map((tab, i) => (
+          <TabsContent key={i} value={tab.question}>
             <p className="text-base text-left tracking-wide text-neutral-500">
               {tab.question}
             </p>
 
             <div className="w-full flex items-center justify-end">
               <TooltipButton
-                content={playingQuestion === tab.question ? "Stop" : "Start"}
+                content={isPlaying ? "Stop" : "Start"}
                 icon={
-                  playingQuestion === tab.question ? (
+                  isPlaying ? (
                     <VolumeX className="min-w-5 min-h-5 text-muted-foreground" />
                   ) : (
                     <Volume2 className="min-w-5 min-h-5 text-muted-foreground" />
@@ -88,14 +83,6 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
               question={tab}
               isWebCam={isWebCam}
               setIsWebCam={setIsWebCam}
-              currentQuestionIndex={questions.findIndex(q => q.question === activeQuestion)}
-              totalQuestions={questions.length}
-              onNextQuestion={() => {
-                const currentIndex = questions.findIndex(q => q.question === activeQuestion);
-                if (currentIndex < questions.length - 1) {
-                  setActiveQuestion(questions[currentIndex + 1].question);
-                }
-              }}
             />
           </TabsContent>
         ))}

@@ -9,7 +9,7 @@ import { CustomBreadCrumb } from "../components/custom-bread-crumb";
 
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Lightbulb } from "lucide-react";
-import { QuestionSection } from "../components/question-section";
+import { QuestionSection } from "@/components/question-section";
 
 export const MockInterviewPage = () => {
   const { interviewId } = useParams<{ interviewId: string }>();

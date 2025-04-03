@@ -15,7 +15,7 @@ interface Testimonial {
 const initialTestimonials: Testimonial[] = [
   {
     id: 1,
-    name: "Sarah Johnson",
+    name: "Sandy johnson",
     role: "Software Engineer",
     company: "Google",
     content:

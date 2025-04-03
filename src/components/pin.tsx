@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
-import { TooltipButton } from "@/components/tooltip-button";
+import { TooltipButton } from "./tooltip-button";
 import { Eye, Newspaper, Sparkles } from "lucide-react";
 
 interface InterviewPinProps {
@@ -45,14 +45,14 @@ export const InterviewPin = ({
         )}
       >
         <p className="text-[12px] text-muted-foreground truncate whitespace-nowrap">
-  {interview?.createdAt
-    ? `${new Date(
-        (interview.createdAt as any).toDate()
-      ).toLocaleDateString("en-US", { dateStyle: "long" })} - ${new Date(
-        (interview.createdAt as any).toDate()
-      ).toLocaleTimeString("en-US", { timeStyle: "short" })}`
-    : "No Date Available"}
-</p>
+          {`${new Date(interview?.createdAt.toDate()).toLocaleDateString(
+            "en-US",
+            { dateStyle: "long" }
+          )} - ${new Date(interview?.createdAt.toDate()).toLocaleTimeString(
+            "en-US",
+            { timeStyle: "short" }
+          )}`}
+        </p>
 
         {!onMockPage && (
           <div className="flex items-center justify-center">
