@@ -12,7 +12,9 @@ const defaultResumeData: ResumeData = {
     email: '',
     phone: '',
     location: '',
-    summary: ''
+    summary: '',
+    linkedin: '',
+    github: ''
   },
   experience: [],
   education: [],
