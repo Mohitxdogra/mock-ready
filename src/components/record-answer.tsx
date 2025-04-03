@@ -205,16 +205,62 @@ export const RecordAnswer = ({
       return;
     }
     try {
+      // Compare user's answer with expected answer to generate rating
+      const userKeywords = userAnswer.toLowerCase().split(' ');
+      const expectedKeywords = question.answer.toLowerCase().split(' ');
+      
+      // Calculate matching keywords
+      const matchingKeywords = userKeywords.filter(word => 
+        expectedKeywords.includes(word) && word.length > 3
+      ).length;
+      
+      // Calculate rating based on keyword matches and answer length
+      let rating = Math.min(10, Math.max(1, 
+        Math.floor((matchingKeywords / expectedKeywords.length) * 10) + 
+        Math.floor(Math.min(userAnswer.length / question.answer.length, 1) * 2)
+      ));
+      
+      // Generate detailed feedback
+      let feedback = "";
+      if (rating >= 8) {
+        feedback = `Excellent answer! Your response aligns well with what we were looking for. Here's what you did well:\n
+1. You covered the key points effectively
+2. Your explanation was clear and comprehensive
+3. You demonstrated good understanding of the topic\n
+Minor suggestions for improvement:
+- Consider adding more specific examples
+- You could mention more about ${expectedKeywords.slice(0,3).join(', ')}`;
+      } else if (rating >= 6) {
+        feedback = `Good answer! You've covered some important points. Here's your feedback:\n
+1. You demonstrated basic understanding of the topic
+2. Your explanation was clear\n
+Areas for improvement:
+- Try to include more details about ${expectedKeywords.slice(0,3).join(', ')}
+- Consider providing specific examples
+- Expand on your practical experience
+- Make your answer more comprehensive`;
+      } else {
+        feedback = `Thank you for your answer. Here's how you can improve:\n
+1. The expected answer should cover: ${expectedKeywords.slice(0,5).join(', ')}
+2. Try to provide more specific examples
+3. Include practical experiences or scenarios
+4. Explain your points in more detail
+5. Consider structuring your answer with clear points\n
+Review the correct answer and try to incorporate these elements in your future responses.`;
+      }
+
       const docRef = await addDoc(collection(db, "userAnswers"), {
         mockIdRef: interviewId,
         question: question.question,
         correct_ans: question.answer,
         user_ans: userAnswer,
         userId,
+        rating,
+        feedback,
         createdAt: serverTimestamp(),
       });
       await updateDoc(doc(db, "userAnswers", docRef.id), { id: docRef.id });
-      toast.success("Your answer has been saved.");
+      toast.success("Your answer has been saved with feedback.");
       setIsSaved(true);
     } catch (error) {
       toast.error("An error occurred while saving.");

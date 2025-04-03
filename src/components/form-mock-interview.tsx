@@ -74,6 +74,10 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
       setIsLoading(true);
       const aiResult = await generateAIResult(data);
 
+      if (aiResult?.questions?.length !== 5) {
+        throw new Error("Invalid AI response");
+      }
+
       if (initialData) {
         await updateDoc(doc(db, "interviews", initialData.id), {
           questions: aiResult.questions,
@@ -100,7 +104,7 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
       navigate("/generate", { replace: true });
     } catch (error) {
       console.error(error);
-      toast.error("Error!", { description: "Something went wrong." });
+      toast.error("Error!", { description: "Something went wrong. Please try again." });
     } finally {
       setIsLoading(false);
     }
