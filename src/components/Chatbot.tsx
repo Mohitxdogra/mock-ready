@@ -27,13 +27,13 @@ const Chatbot = () => {
         text = text.replace(bulletPointRegex, "<ul class='list-disc list-inside'><li>$2</li></ul>");
 
         const headerRegex = /^(#{1,6})\s*(.*?)$/gm;
-        text = text.replace(headerRegex, (match, hashes, headerText) => {
+        text = text.replace(headerRegex, (_match, hashes, headerText) => {
             const level = hashes.length;
-            return `<h${level} class="font-bold text-gray-800">${headerText}</h${level}>`;
+            return `<h${level} class="font-bold text-blue-300">${headerText}</h${level}>`;
         });
 
         const blockquoteRegex = /^>\s+(.*)$/gm;
-        text = text.replace(blockquoteRegex, "<blockquote class='border-l-4 pl-4 italic text-gray-600'>$1</blockquote>");
+        text = text.replace(blockquoteRegex, "<blockquote class='border-l-4 pl-4 italic text-blue-400'>$1</blockquote>");
 
         return text;
     };
@@ -69,14 +69,13 @@ const Chatbot = () => {
         setIsTyping(true);
 
         const systemMessage = {
-            role: "system",
-            content: `You are a Chat bot specializing in competitive exam preparation. 
-            Provide brief explanations, and answer to given Question , and approach to solve that Question in minimum word as possible. Ensure your responses are 
-            clear and helpful for learners.`
+            role: "system" as const,
+            content: `You are an AI-powered career assistant for Mock Ready, 
+            helping users with technical & behavioral mock interviews, resume building, and job preparation.`
         };
-
+        
         const formattedMessages = newMessages.map(msg => ({
-            role: msg.role,
+            role: msg.role === "user" ? "user" as const : "assistant" as const,
             content: String(msg.content)
         }));
 
@@ -91,7 +90,10 @@ const Chatbot = () => {
             });
 
             const reply = completion.choices[0].message;
-            setMessages([...newMessages, reply]);
+            setMessages([...newMessages, {
+                role: reply.role,
+                content: reply.content || ""
+            }]);
         } catch (error) {
             console.error("Groq error:", error);
         } finally {
@@ -111,16 +113,16 @@ const Chatbot = () => {
         <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-700 transition"
+                className="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-600 transition"
             >
                 💬
             </button>
 
             {isOpen && (
-                <div ref={chatboxRef} className="fixed bottom-20 right-4 md:right-6 w-80 md:w-96 bg-gray-100 border border-gray-300 rounded-xl shadow-lg flex flex-col overflow-hidden">
-                    <div className="bg-gray-200 text-gray-800 px-4 py-3 font-semibold flex justify-between items-center">
-                        <span>AI Assistant</span>
-                        <button onClick={() => setIsOpen(false)} className="text-gray-600 hover:text-red-500">✖</button>
+                <div ref={chatboxRef} className="fixed bottom-20 right-4 md:right-6 w-80 md:w-96 bg-[#0a0f1f] border border-gray-600 rounded-xl shadow-lg flex flex-col overflow-hidden">
+                    <div className="bg-[#1a2238] text-white px-4 py-3 font-semibold flex justify-between items-center">
+                        <span>Mock Ready</span>
+                        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-red-500">✖</button>
                     </div>
 
                     <div className="h-80 max-h-[60vh] overflow-y-auto p-3 space-y-3 text-sm">
@@ -133,26 +135,26 @@ const Chatbot = () => {
                                     className={`max-w-xs px-4 py-2 rounded-lg ${
                                         msg.role === "user"
                                             ? "bg-blue-500 text-white"
-                                            : "bg-white text-gray-900 border"
+                                            : "bg-blue-900 text-white border border-blue-500"
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: formatText(msg.content) }}
                                 />
                             </div>
                         ))}
                         {isTyping && (
-                            <div className="text-gray-500 italic text-sm px-2">Bot is typing...</div>
+                            <div className="text-gray-400 italic text-sm px-2">Bot is typing...</div>
                         )}
                         <div ref={scrollRef}></div>
                     </div>
 
-                    <div className="p-3 border-t border-gray-300 flex items-center gap-2 bg-gray-100">
+                    <div className="p-3 border-t border-gray-600 flex items-center gap-2 bg-[#1a2238]">
                         <input
                             type="text"
                             value={input}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder="Type a message..."
-                            className="flex-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                            className="flex-1 p-2 rounded border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm bg-gray-800 text-white"
                         />
                         <button
                             onClick={sendMessage}

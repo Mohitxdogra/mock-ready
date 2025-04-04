@@ -18,7 +18,7 @@ import About from "./routes/AboutUs";
 import { ResumeProvider } from "./context/ResumeContext";
 import ResumeBuilder from "./components/Resume/ResumeBuilder";
 import ContactUs from "./routes/ContactUs";
-import ChatBot  from "./components/ChatBot"; // Ensure this file exists
+import ChatBot  from "./components/Chatbot"; 
 
 
 const App = () => {
