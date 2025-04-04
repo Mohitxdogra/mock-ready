@@ -5341,6 +5341,12 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
+  node-domexception@1.0.0: {}
+
+  node-fetch@2.7.0:
+    dependencies:
+      whatwg-url: 5.0.0
+
   node-releases@2.0.19: {}
 
   normalize-path@3.0.0: {}
