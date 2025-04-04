@@ -18,11 +18,13 @@ import About from "./routes/AboutUs";
 import { ResumeProvider } from "./context/ResumeContext";
 import ResumeBuilder from "./components/Resume/ResumeBuilder";
 import ContactUs from "./routes/ContactUs";
+import ChatBot  from "./components/ChatBot"; // Ensure this file exists
 
 const App = () => {
   return (
     <ResumeProvider>
       <Router>
+        <ChatBot />
         <Routes>
           {/* public routes */}
           <Route element={<PublicLayout />}>
