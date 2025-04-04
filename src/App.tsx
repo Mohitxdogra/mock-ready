@@ -11,13 +11,14 @@ import { Generate } from "./components/generate";
 import { Dashboard } from "./routes/dashboard";
 import { CreateEditPage } from "./routes/create-edit-page";
 import { MockLoadPage } from "./routes/mock-load-page";
-import { MockInterviewPage } from "./routes/mock-interview-page"; // Ensure this file exists
+import { MockInterviewPage } from "./routes/mock-interview-page";
 import { Feedback } from "./routes/feedback";
 import ServicesPage from "./routes/Services";  
 import About from "./routes/AboutUs";
 import { ResumeProvider } from "./context/ResumeContext";
 import ResumeBuilder from "./components/Resume/ResumeBuilder";
 import ContactUs from "./routes/ContactUs";
+
 
 const App = () => {
   return (
@@ -38,22 +39,21 @@ const App = () => {
             <Route path="/signin/*" element={<SignInPage />} />
             <Route path="/signup/*" element={<SignUpPage />} />
           </Route>
+
           {/* protected routes */}
-          <Route element={<ProtectRoutes> <MainLayout /> </ProtectRoutes>}> 
-          
-            {/* all the Protected Routes */}
+          <Route element={<ProtectRoutes><MainLayout /></ProtectRoutes>}>
             <Route element={<Generate />} path="/generate/">
               <Route index element={<Dashboard />} />
               <Route path=":interviewId" element={<CreateEditPage />} />
-              <Route path="interview/:interviewId" element={<MockLoadPage />}  />
-              <Route 
-                path="interview/:interviewId/start" 
-                element={<MockInterviewPage />} 
-              />
+              <Route path="interview/:interviewId" element={<MockLoadPage />} />
+              <Route path="interview/:interviewId/start" element={<MockInterviewPage />} />
               <Route path="feedback/:interviewId" element={<Feedback />} />
             </Route>
-          </Route> 
+          </Route>
         </Routes>
+
+        {/* 💬 Floating Chatbot visible on all pages */}
+    
       </Router>
     </ResumeProvider>
   );
