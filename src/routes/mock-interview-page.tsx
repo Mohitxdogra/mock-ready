@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Interview } from "../types";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -49,9 +48,9 @@ export const MockInterviewPage = () => {
   if (error) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
-        <Alert className="bg-red-100 border border-red-300 p-4 rounded-lg">
-          <AlertTitle className="text-red-700 font-semibold">Error</AlertTitle>
-          <AlertDescription className="text-red-600">{error}</AlertDescription>
+        <Alert className="bg-red-50 border border-red-300 p-6 rounded-xl shadow-lg">
+          <AlertTitle className="text-red-800 font-bold text-lg">Oops!</AlertTitle>
+          <AlertDescription className="text-red-700 text-sm">{error}</AlertDescription>
         </Alert>
       </div>
     );
@@ -63,28 +62,28 @@ export const MockInterviewPage = () => {
   }
 
   return (
-    <div className="flex flex-col w-full gap-6 py-3 md:py-5 px-2 md:px-4">
+    <div className="flex flex-col w-full gap-8 py-4 px-4 md:px-8 bg-gradient-to-r from-blue-50 to-blue-100">
       <CustomBreadCrumb
         breadCrumbPage="Start"
         breadCrumpItems={[
           { label: "Mock Interviews", link: "/generate" },
-          { label: interview.position || "", link: `/generate/interview/${interview.id}` },
+          { label: interview.position || "Interview", link: `/generate/interview/${interview.id}` },
         ]}
       />
 
-      <div className="w-full">
-        <Alert className="bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-100 p-3 md:p-4 rounded-lg flex items-start gap-2 md:gap-3">
-          <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+      <div className="w-full bg-white rounded-lg shadow-xl p-6 mb-8">
+        <Alert className="bg-gradient-to-r from-indigo-100 to-indigo-300 border border-indigo-400 p-5 rounded-lg flex items-center gap-4 shadow-md">
+          <Lightbulb className="h-6 w-6 text-yellow-500 animate-pulse" />
           <div>
-            <AlertTitle className="text-blue-900 font-bold text-base md:text-lg">Important Note</AlertTitle>
-            <AlertDescription className="text-sm text-gray-700 mt-1 leading-relaxed space-y-2">
+            <AlertTitle className="text-indigo-800 font-semibold text-xl">Important Note</AlertTitle>
+            <AlertDescription className="text-sm text-gray-700 mt-2 leading-relaxed space-y-2">
               <p>
-                Press <span className="font-semibold text-blue-700">"Record Answer"</span> to begin answering the question. Once you finish the interview, 
-                you'll receive feedback comparing your responses with the ideal answers.
+                Press <span className="font-semibold text-indigo-700">"Record Answer"</span> to begin answering the question.
+                Once you finish the interview, you'll receive feedback comparing your responses with the ideal answers.
               </p>
               <p>
-                <strong className="text-blue-800">Note:</strong>{" "}
-                <span className="font-medium text-gray-900">Your video is never recorded.</span>{" "}
+                <strong className="text-indigo-800">Note:</strong>{" "}
+                <span className="font-medium text-gray-900">Your video is never recorded.</span>
                 You can disable the webcam anytime if preferred.
               </p>
             </AlertDescription>
@@ -93,7 +92,7 @@ export const MockInterviewPage = () => {
       </div>
 
       {interview.questions?.length > 0 && (
-        <div className="w-full flex flex-col items-start">
+        <div className="w-full bg-white p-6 rounded-lg shadow-lg">
           <QuestionSection questions={interview.questions} />
         </div>
       )}
