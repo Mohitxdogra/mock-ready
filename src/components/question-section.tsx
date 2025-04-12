@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TooltipButton } from "./tooltip-button";
@@ -16,6 +16,16 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
 
   const [currentSpeech, setCurrentSpeech] =
     useState<SpeechSynthesisUtterance | null>(null);
+
+  // Add useEffect to stop audio when question changes
+  useEffect(() => {
+    // Stop any ongoing speech when the current question changes
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      setCurrentSpeech(null);
+    }
+  }, [currentQuestionNumber]);
 
   const handlePlayQuestion = (qst: string) => {
     if (isPlaying && currentSpeech) {
