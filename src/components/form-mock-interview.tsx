@@ -121,6 +121,15 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
   const onSubmit = async (data: FormData) => {
     try {
       setLoading(true);
+      form.clearErrors();
+
+      // Validate form data
+      if (!data.position || !data.description || !data.techStack) {
+        toast.error("Error", {
+          description: "Please fill in all required fields",
+        });
+        return;
+      }
 
       const aiResult = await generateAiResponse(data);
 
@@ -139,12 +148,16 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
         });
       }
 
-      toast(toastMessage.title, { description: toastMessage.description });
+      toast.success(toastMessage.title, { 
+        description: toastMessage.description,
+        duration: 3000,
+      });
       navigate("/generate", { replace: true });
     } catch (error) {
-      console.log(error);
-      toast.error("Error..", {
-        description: `Something went wrong. Please try again later`,
+      console.error("Form submission error:", error);
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again later",
+        duration: 5000,
       });
     } finally {
       setLoading(false);
@@ -312,14 +325,15 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
               size={"sm"}
               variant={"outline"}
               disabled={isSubmitting || loading}
-              onClick={() =>
+              onClick={() => {
                 form.reset({
                   position: "",
                   description: "",
                   experience: 0,
                   techStack: "",
-                })
-              }
+                });
+                form.clearErrors();
+              }}
             >
               Reset
             </Button>
@@ -327,9 +341,13 @@ export const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
               type="submit"
               size={"sm"}
               disabled={isSubmitting || !isValid || loading}
+              className="min-w-[100px]"
             >
               {loading ? (
-                <Loader className="text-gray-50 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </div>
               ) : (
                 actions
               )}
