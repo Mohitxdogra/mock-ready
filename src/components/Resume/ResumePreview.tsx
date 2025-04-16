@@ -1,15 +1,29 @@
 import { ResumeData } from './types'
-// Removed unused React import
+import ModernTemplate from './Templates/ModernTemplate';
+import ClassicTemplate from './Templates/ClassicTemplate';
+import MinimalTemplate from './Templates/MinimalTemplate';
+
 
 interface ResumePreviewProps {
-  data: ResumeData
+  data: ResumeData 
+    selectedTemplate: 'modern' | 'classic' | 'minimal'
 }
 
 // Create styles for PDF  
 
 // Create PDF Document component
 
-export default function ResumePreview({ data }: ResumePreviewProps) {
+export default function ResumePreview({ data, selectedTemplate }: ResumePreviewProps) {
+  // Render the selected template
+  if (selectedTemplate === 'modern') {
+    return <ModernTemplate data={data} />;
+  } else if (selectedTemplate === 'classic') {
+    return <ClassicTemplate data={data} />;
+  } else if (selectedTemplate === 'minimal') {
+    return <MinimalTemplate data={data} />;
+  }
+  
+  // Default template as fallback
   return (
     <div className="bg-white p-10 rounded-xl shadow-xl max-w-4xl mx-auto text-gray-800 font-sans">
       {/* Header */}
