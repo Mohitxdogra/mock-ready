@@ -49,6 +49,14 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
     })
   }
 
+  const deleteExperience = (index: number) => {
+    const newExperience = data.experience.filter((_, i) => i !== index)
+    onChange({
+      ...data,
+      experience: newExperience
+    })
+  }
+
   const addEducation = () => {
     onChange({
       ...data,
@@ -80,13 +88,27 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
     })
   }
 
-
+  const deleteEducation = (index: number) => {
+    const newEducation = data.education.filter((_, i) => i !== index)
+    onChange({
+      ...data,
+      education: newEducation
+    })
+  }
 
   const updateSkills = (skills: string) => {
     const skillsArray = skills.split(',').map(skill => skill.trim()).filter(Boolean)
     onChange({
       ...data,
       skills: skillsArray
+    })
+  }
+
+  const deleteSkill = (skill: string) => {
+    const newSkills = data.skills.filter((s) => s !== skill)
+    onChange({
+      ...data,
+      skills: newSkills
     })
   }
 
@@ -210,6 +232,12 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
               />
               <SpeechToText onTextChange={(text) => updateExperience(index, 'description', text)} field="Experience Description" />
             </div>
+            <button
+              onClick={() => deleteExperience(index)}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mt-2"
+            >
+              Delete Experience
+            </button>
           </div>
         ))}
       </div>
@@ -288,6 +316,12 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
               />
               <SpeechToText onTextChange={(text) => updateEducation(index, 'description', text)} field="Education Description" />
             </div>
+            <button
+              onClick={() => deleteEducation(index)}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mt-2"
+            >
+              Delete Education
+            </button>
           </div>
         ))}
       </div>
@@ -302,6 +336,19 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
             className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700 h-32"
           />
           <SpeechToText onTextChange={(text) => updateSkills(text)} field="Skills" />
+        </div>
+        <div className="mt-4">
+          {data.skills.map((skill, index) => (
+            <div key={index} className="flex justify-between items-center mb-2">
+              <span className="text-white">{skill}</span>
+              <button
+                onClick={() => deleteSkill(skill)}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Delete Skill
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
