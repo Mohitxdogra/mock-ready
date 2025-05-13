@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ResumeData } from './types'
-import SpeechToText from './SpeechToText'
 
 interface ResumeFormProps {
   data: ResumeData
@@ -8,7 +7,7 @@ interface ResumeFormProps {
 }
 
 export default function ResumeForm({ data, onChange }: ResumeFormProps) {
-  const [] = useState('personal')
+  const [skillInput, setSkillInput] = useState('')
 
   const updatePersonalInfo = (field: string, value: string) => {
     onChange({
@@ -96,13 +95,6 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
     })
   }
 
-  const updateSkills = (skills: string) => {
-    const skillsArray = skills.split(',').map(skill => skill.trim()).filter(Boolean)
-    onChange({
-      ...data,
-      skills: skillsArray
-    })
-  }
 
   const deleteSkill = (skill: string) => {
     const newSkills = data.skills.filter((s) => s !== skill)
@@ -110,6 +102,58 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
       ...data,
       skills: newSkills
     })
+  }
+
+  // Project handlers
+  const addProject = () => {
+    onChange({
+      ...data,
+      projects: [
+        ...data.projects,
+        {
+          name: '',
+          description: '',
+          technologies: [],
+          link: ''
+        }
+      ]
+    })
+  }
+
+  const updateProject = (index: number, field: string, value: string) => {
+    const newProjects = [...data.projects]
+    if (field === 'technologies') {
+      newProjects[index].technologies = value.split(',').map((tech: string) => tech.trim()).filter(Boolean)
+    } else if (field === 'name') {
+      newProjects[index].name = value
+    } else if (field === 'description') {
+      newProjects[index].description = value
+    } else if (field === 'link') {
+      newProjects[index].link = value
+    }
+    onChange({
+      ...data,
+      projects: newProjects
+    })
+  }
+
+  const deleteProject = (index: number) => {
+    const newProjects = data.projects.filter((_, i) => i !== index)
+    onChange({
+      ...data,
+      projects: newProjects
+    })
+  }
+
+  const addSkill = () => {
+    const newSkill = skillInput.trim()
+    if (newSkill && !data.skills.includes(newSkill)) {
+      onChange({
+        ...data,
+        skills: [...data.skills, newSkill]
+      })
+      setSkillInput('')
+    }
   }
 
   return (
@@ -125,7 +169,6 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
               onChange={(e) => updatePersonalInfo('fullName', e.target.value)}
               className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700"
             />
-            <SpeechToText onTextChange={(text) => updatePersonalInfo('fullName', text)} field="Full Name" />
           </div>
           <input
             type="email"
@@ -169,7 +212,6 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
               onChange={(e) => updatePersonalInfo('summary', e.target.value)}
               className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700 h-32"
             />
-            <SpeechToText onTextChange={(text) => updatePersonalInfo('summary', text)} field="Professional Summary" />
           </div>
         </div>
       </div>
@@ -179,7 +221,7 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
           <h2 className="text-2xl font-bold text-white">Experience</h2>
           <button
             onClick={addExperience}
-            className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Add Experience
           </button>
@@ -230,7 +272,6 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
                 onChange={(e) => updateExperience(index, 'description', e.target.value)}
                 className="flex-1 p-2 rounded bg-gray-700 text-white border border-gray-600 h-32"
               />
-              <SpeechToText onTextChange={(text) => updateExperience(index, 'description', text)} field="Experience Description" />
             </div>
             <button
               onClick={() => deleteExperience(index)}
@@ -247,7 +288,7 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
           <h2 className="text-2xl font-bold text-white">Education</h2>
           <button
             onClick={addEducation}
-            className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Add Education
           </button>
@@ -314,7 +355,6 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
                 onChange={(e) => updateEducation(index, 'description', e.target.value)}
                 className="flex-1 p-2 rounded bg-gray-700 text-white border border-gray-600 h-32"
               />
-              <SpeechToText onTextChange={(text) => updateEducation(index, 'description', text)} field="Education Description" />
             </div>
             <button
               onClick={() => deleteEducation(index)}
@@ -327,29 +367,88 @@ export default function ResumeForm({ data, onChange }: ResumeFormProps) {
       </div>
 
       <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">Projects</h2>
+          <button
+            onClick={addProject}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Add Project
+          </button>
+        </div>
+        {data.projects.map((project, index) => (
+          <div key={index} className="space-y-4 mb-6 p-4 bg-gray-800 rounded">
+            <input
+              type="text"
+              placeholder="Project Name"
+              value={project.name}
+              onChange={(e) => updateProject(index, 'name', e.target.value)}
+              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
+            />
+            <textarea
+              placeholder="Project Description"
+              value={project.description}
+              onChange={(e) => updateProject(index, 'description', e.target.value)}
+              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 h-24"
+            />
+            <input
+              type="text"
+              placeholder="Technologies (comma-separated)"
+              value={project.technologies.join(', ')}
+              onChange={(e) => updateProject(index, 'technologies', e.target.value)}
+              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
+            />
+            <input
+              type="text"
+              placeholder="Project Link (optional)"
+              value={project.link}
+              onChange={(e) => updateProject(index, 'link', e.target.value)}
+              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
+            />
+            <button
+              onClick={() => deleteProject(index)}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mt-2"
+            >
+              Delete Project
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div>
         <h2 className="text-2xl font-bold text-white mb-4">Skills</h2>
         <div className="flex gap-2">
-          <textarea
-            placeholder="Enter skills (comma-separated)"
-            value={data.skills.join(', ')}
-            onChange={(e) => updateSkills(e.target.value)}
-            className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700 h-32"
+          <input
+            type="text"
+            placeholder="Enter a skill"
+            value={skillInput}
+            onChange={e => setSkillInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+            className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700"
           />
-          <SpeechToText onTextChange={(text) => updateSkills(text)} field="Skills" />
+          <button
+            type="button"
+            onClick={addSkill}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Add Skill
+          </button>
         </div>
-        <div className="mt-4">
-          {data.skills.map((skill, index) => (
-            <div key={index} className="flex justify-between items-center mb-2">
-              <span className="text-white">{skill}</span>
-              <button
-                onClick={() => deleteSkill(skill)}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Delete Skill
-              </button>
-            </div>
-          ))}
-        </div>
+        {data.skills.length > 0 && (
+          <div className="mt-4">
+            {data.skills.map((skill, index) => (
+              <div key={index} className="flex justify-between items-center mb-2">
+                <span className="text-white">{skill}</span>
+                <button
+                  onClick={() => deleteSkill(skill)}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Delete Skill
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

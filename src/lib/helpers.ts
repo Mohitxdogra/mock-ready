@@ -20,6 +20,6 @@ export const MainRoutes=[
            
                 {
                     label: "Resume", // Fix: "REsume" ko "Resume" kiya for consistency
-                    href: "/resumebuilder", // Fix: Route ke naam lowercase aur hyphenated rakhna best practice hai
+                    href: "/resumebuilder", 
                   }
 ];
