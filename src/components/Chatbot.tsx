@@ -82,7 +82,7 @@ const Chatbot = () => {
         try {
             const completion = await groq.chat.completions.create({
                 messages: [systemMessage, ...formattedMessages],
-                model: "llama3-70b-8192",
+                model: "llama-3.3-70b-versatile",
                 temperature: 0.7,
                 max_tokens: 300,
                 top_p: 1,
